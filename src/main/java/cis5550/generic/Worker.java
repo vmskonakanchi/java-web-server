@@ -22,26 +22,35 @@ public class Worker {
             timer.schedule(new TimerTask() {
                 @Override
                 public void run() {
-                    Path pathToFile = Path.of(filePath, "id");
                     System.out.println("Hitting Master");
                     String idToPing = "";
                     try {
-                        if (Files.exists(pathToFile)) {
-                            idToPing = Files.readString(pathToFile, StandardCharsets.UTF_8);
+                        //checking if the directory exists
+                        File file = new File(filePath);
+                        if (file.exists() && file.isDirectory()) {
+                            File idFile = new File(filePath, "id");
+                            if (idFile.exists()) {
+                                idToPing = Files.readString(idFile.toPath());
+                            } else {
+                                idToPing = String.valueOf(new Random().nextInt(1000000));
+                                idFile.createNewFile();
+                                Files.writeString(idFile.toPath(), idToPing);
+                            }
                         } else {
-                            Random r = new Random(System.currentTimeMillis());
-                            idToPing = String.valueOf(10000 + r.nextInt(20000));
-                            Files.createFile(pathToFile);
+                            idToPing = String.valueOf(new Random().nextInt(1000000));
+                            file.mkdir();
+                            new File(filePath, "id").createNewFile();
+                            Files.writeString(Path.of(filePath, "id"), idToPing);
                         }
-                        URL toPingUrl = new URL("http://" + address + "/ping?id=" + idToPing + "&port=" + portToPing);
-                        toPingUrl.getContent();
+                        URL urlToPing = new URL("http://" + address + "/ping?id=" + idToPing + "&port=" + portToPing);
+                        urlToPing.getContent();
                     } catch (Exception e) {
-                        throw new RuntimeException("Error : " + e.getMessage());
+                        throw new RuntimeException(e);
                     }
                 }
             }, 0, THREAD_SLEEP_TIME);
         } catch (Exception e) {
-            System.out.println("Error : " + e.getMessage());
+            System.out.println(e);
         }
 
     }

@@ -1,39 +1,30 @@
 package cis5550.kvs;
-
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-//For usage in assignment-5
 public class DataManager {
+    private Map<String, Map<String, Map<String, String>>> data;
 
-    private final ConcurrentHashMap<String, ConcurrentHashMap<String, Row>> dataStore = new ConcurrentHashMap<>();
+    public DataManager() {
+        this.data = new ConcurrentHashMap<>();
+    }
 
-    public void put(String table, String rowName, String column, String dataToInsert) {
-        //creating a thread for efficiency
-        if (dataStore.contains(table)) {
-            ConcurrentHashMap<String, Row> tempStore = dataStore.get(table);
-            if (tempStore.contains(rowName)) {
-                // insert the data into row
-                Row row = tempStore.get(rowName);
-                row.put(column, dataToInsert);
-            } else {
-                //create a new row and insert data
-                Row rowToAdd = new Row(rowName);
-                rowToAdd.put(column, dataToInsert);
-                tempStore.put(rowName, rowToAdd);
-                dataStore.replace(table, tempStore);
+    public void put(String tableName, String rowName, String columnName, String value) {
+        Map<String, Map<String, String>> table = data.getOrDefault(tableName, new ConcurrentHashMap<>());
+        Map<String, String> row = table.getOrDefault(rowName, new ConcurrentHashMap<>());
+        row.put(columnName, value);
+        table.put(rowName, row);
+        data.put(tableName, table);
+    }
+
+    public String get(String tableName, String rowName, String columnName) {
+        Map<String, Map<String, String>> table = data.get(tableName);
+        if (table != null) {
+            Map<String, String> row = table.get(rowName);
+            if (row != null) {
+                return row.get(columnName);
             }
-        } else {
-            //create a new table
-            ConcurrentHashMap<String, Row> tempStore = new ConcurrentHashMap<>();
-            Row rowToAdd = new Row(rowName); // creating a new row
-            rowToAdd.put(column, dataToInsert); // adding column and the value in the column to the row
-            tempStore.put(rowName, rowToAdd); // adding row to the table
-            dataStore.put(table, tempStore); // adding table to the map
         }
+        return null;
     }
-
-    public String get(String table, String row, String column) {
-        return dataStore.get(table).get(row).get(column) != null ? dataStore.get(table).get(row).get(column) : null;
-    }
-
 }
