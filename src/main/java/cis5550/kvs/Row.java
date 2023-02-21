@@ -8,16 +8,6 @@ public class Row implements Serializable {
     protected String key;
     protected HashMap<String, byte[]> values;
 
-    private int version;
-
-    public int getVersion() {
-        return version;
-    }
-
-    public void incrementVersion() {
-        version++;
-    }
-
     public Row(String keyArg) {
         key = keyArg;
         values = new HashMap<String, byte[]>();
@@ -182,3 +172,4 @@ public class Row implements Serializable {
         return baos.toByteArray();
     }
 }
+
