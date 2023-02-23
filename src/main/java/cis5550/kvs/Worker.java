@@ -22,24 +22,27 @@ public class Worker extends cis5550.generic.Worker {
         DataManager dataManager = new DataManager(); // data structure for storing data
         ExecutorService threadPool = Executors.newFixedThreadPool(MAX_THREADS); // thread pool for handling requests
 
+        // Lock for synchronizing PUT requests
+        Object lock = new Object();
+
         Server.put("/data/:T/:R/:C", (req, res) -> {
             try {
-
                 String tableName = req.params("T");
                 String rowName = req.params("R");
                 String columnName = req.params("C");
                 if (req.queryParams().contains("ifcolumn") && req.queryParams().contains("equals")) {
                     String ifColumnName = req.queryParams("ifcolumn");
                     String ifColumnValue = req.queryParams("equals");
-                    int latestVersion = dataManager.getLatestVersion(tableName, rowName, columnName);
-                    String data = new String(dataManager.get(tableName, rowName, ifColumnName, latestVersion), StandardCharsets.UTF_8);
 
                     // Check if the ifcolumn exists and has the value specified in equals
-                    if (data.equals(ifColumnValue)) {
+                    int latestVersion = dataManager.getLatestVersion(tableName, rowName, columnName);
+                    byte[] byteData = dataManager.get(tableName, rowName, ifColumnName, latestVersion) != null ? dataManager.get(tableName, rowName, ifColumnName, latestVersion) : new byte[0];
+                    String data = new String(byteData, StandardCharsets.UTF_8);
+                    if (!data.equals("") && data.equals(ifColumnValue)) {
                         // If the ifcolumn exists and has the value specified in equals, execute the PUT operation
-                        threadPool.execute(() -> {
+                        synchronized (lock) { // acquire the lock
                             res.header("version", dataManager.put(tableName, rowName, columnName, req.bodyAsBytes()));
-                        });
+                        }
                         return "OK";
                     } else {
                         // If the ifcolumn does not exist or does not have the value specified in equals, return FAIL
@@ -47,9 +50,10 @@ public class Worker extends cis5550.generic.Worker {
                     }
                 } else {
                     // If the query parameters are not present, execute the PUT operation
-                    threadPool.execute(() -> {
+                    synchronized (lock) { // acquire the lock
                         res.header("version", dataManager.put(tableName, rowName, columnName, req.bodyAsBytes()));
-                    });
+                    }
+
                     return "OK";
                 }
             } catch (Exception e) {
@@ -74,11 +78,10 @@ public class Worker extends cis5550.generic.Worker {
                     res.header("version", String.valueOf(latestVersion));
                     res.body(data);
                 }
-                return null;
             } catch (Exception e) {
                 res.status(404, "FAIL");
-                return null;
             }
+            return null;
         });
     }
 }

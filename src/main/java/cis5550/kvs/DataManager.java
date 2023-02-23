@@ -1,22 +1,23 @@
 package cis5550.kvs;
 
+import javax.swing.text.html.HTMLDocument;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class DataManager {
 
-    private Map<String, Map<String, Map<String, Map<Integer, byte[]>>>> data;
-    private Lock lock;
+    private final Map<String, Map<String, Map<String, Map<Integer, byte[]>>>> data;
+    private ReentrantReadWriteLock lock;
 
     public DataManager() {
         data = new ConcurrentHashMap<>();
+        lock = new ReentrantReadWriteLock();
     }
 
-    public synchronized String put(String table, String row, String column, byte[] value) {
+    public String put(String table, String row, String column, byte[] value) {
+        lock.writeLock().lock();
         try {
-            lock.lock();
             Map<String, Map<String, Map<Integer, byte[]>>> rowMap = data.get(table);
             if (rowMap == null) {
                 rowMap = new ConcurrentHashMap<>();
@@ -34,47 +35,39 @@ public class DataManager {
             }
             int latestVersion = getLatestVersion(versionMap);
             int newVersion = latestVersion + 1;
-            versionMap.put(newVersion, value);
+            versionMap.put(newVersion + 1, value);
             return String.valueOf(newVersion);
+
         } finally {
-            lock.unlock();
+            lock.writeLock().unlock();
         }
     }
 
-    private synchronized int getLatestVersion(Map<Integer, byte[]> versionMap) {
-        int latestVersion = 0;
-        for (int version : versionMap.keySet()) {
-            if (version > latestVersion) {
-                latestVersion = version;
-            }
-        }
-        return latestVersion;
-    }
-
-    public synchronized byte[] get(String table, String row, String column, int version) {
+    private int getLatestVersion(Map<Integer, byte[]> versionMap) {
+        lock.readLock().lock();
         try {
-            lock.lock();
-            Map<String, Map<String, Map<Integer, byte[]>>> rowMap = data.get(table);
-            if (rowMap == null) {
-                return null;
-            }
-            Map<String, Map<Integer, byte[]>> colMap = rowMap.get(row);
-            if (colMap == null) {
-                return null;
-            }
-            Map<Integer, byte[]> versionMap = colMap.get(column);
-            if (versionMap == null || versionMap.size() < version) {
-                return null;
-            }
+            return versionMap.keySet().stream().max(Integer::compareTo).orElse(0);
+        } finally {
+            lock.readLock().unlock();
+        }
+    }
+
+    public byte[] get(String table, String row, String column, int version) {
+        lock.readLock().lock();
+        try {
+            Map<Integer, byte[]> versionMap =
+                    data.computeIfAbsent(table, k -> new ConcurrentHashMap<>())
+                            .computeIfAbsent(row, k -> new ConcurrentHashMap<>())
+                            .computeIfAbsent(column, k -> new ConcurrentHashMap<>());
             return versionMap.get(version);
         } finally {
-            lock.unlock();
+            lock.readLock().unlock();
         }
     }
 
-    public synchronized int getLatestVersion(String table, String row, String column) {
+    public int getLatestVersion(String table, String row, String column) {
+        lock.readLock().lock();
         try {
-            lock.lock();
             Map<String, Map<String, Map<Integer, byte[]>>> rowMap = data.get(table);
             if (rowMap == null) {
                 return 0;
@@ -89,7 +82,7 @@ public class DataManager {
             }
             return getLatestVersion(versionMap);
         } finally {
-            lock.unlock();
+            lock.readLock().unlock();
         }
     }
 }
