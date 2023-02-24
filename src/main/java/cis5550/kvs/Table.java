@@ -71,7 +71,7 @@ public class Table implements Comparable<Table> {
     public synchronized String getRowsFromDisk(String parentPath) {
         try {
             StringBuilder builder = new StringBuilder();
-            File readFile = new File(parentPath + name);
+            File readFile = new File(parentPath + "/" + name);
             long totalRows = Files.lines(readFile.toPath()).count();
             InputStream is = new FileInputStream(readFile);
             for (int i = 0; i < totalRows; i++) {
