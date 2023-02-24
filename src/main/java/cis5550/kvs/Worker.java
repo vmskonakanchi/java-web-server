@@ -8,6 +8,8 @@ import java.util.concurrent.*;
 
 public class Worker extends cis5550.generic.Worker {
 
+    private static final int MAX_THREADS = 10;
+
     public static void main(String[] args) {
         if (args.length < 3) {
             System.out.println("Enter the required <port> <storage directory> <ip:port>");
@@ -18,7 +20,7 @@ public class Worker extends cis5550.generic.Worker {
         startPingThread(args[2], args[0], args[1]); // calling start ping thread
 
         DataManager dataManager = new DataManager(); // data structure for storing data
-        PersistentDataManager persistentDataManager = new PersistentDataManager();
+        ExecutorService threadPool = Executors.newFixedThreadPool(MAX_THREADS);
 
         Server.put("/data/:T/:R/:C", (req, res) -> {
             try {
@@ -34,7 +36,7 @@ public class Worker extends cis5550.generic.Worker {
                     String data = new String(byteData, StandardCharsets.UTF_8);
                     if (!data.equals("") && data.equals(ifColumnValue)) {
                         // If the ifcolumn exists and has the value specified in equals, execute the PUT operation
-                        new Thread(() -> {
+                        threadPool.execute(() -> {
                             dataManager.put(tableName, rowName, columnName, req.bodyAsBytes());
                         });
                         return "OK";
@@ -44,9 +46,9 @@ public class Worker extends cis5550.generic.Worker {
                     }
                 } else {
                     // If the query parameters are not present, execute the PUT operation
-                    new Thread(() -> {
+                    threadPool.execute(() -> {
                         dataManager.put(tableName, rowName, columnName, req.bodyAsBytes());
-                    }).start();
+                    });
                     return "OK";
                 }
             } catch (Exception e) {
@@ -72,14 +74,12 @@ public class Worker extends cis5550.generic.Worker {
 
         Server.put("/persist/:tableName", (req, res) -> {
             String tableName = req.params("tableName");
-            if (persistentDataManager.createTable(tableName, args[1])) {
+            if (dataManager.createTable(tableName, args[1])) {
                 return "OK";
             } else {
                 res.status(403, "FAIL");
                 return null;
             }
         });
-
-        Server.get("/", (req, res) -> persistentDataManager.getTablesAsHtml());
     }
 }

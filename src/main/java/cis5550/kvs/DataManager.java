@@ -1,45 +1,55 @@
 package cis5550.kvs;
 
-import javax.swing.text.html.HTMLDocument;
+
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class DataManager {
 
     private final Map<String, Table> data;
-    private final ReentrantReadWriteLock lock;
 
     public DataManager() {
         data = new ConcurrentHashMap<>();
-        lock = new ReentrantReadWriteLock();
     }
 
-    public void put(String tableName, String rowName, String columnName, byte[] value) {
-        synchronized (data) {
-            Table t = data.get(tableName);
-            if (t == null) {
-                t = new Table(tableName);
-                data.put(tableName, t);
-            }
-            t.addColumnToRow(rowName, columnName, value);
-            t.save(Path.of("").toAbsolutePath() + "/__worker");
+    public synchronized boolean createTable(String tableName, String directory) {
+        //check for file exists in the directory
+        if (data.containsKey(tableName)) {
+            return false;
         }
-    }
-
-    public byte[] get(String tableName, String rowName, String columnName) {
-        synchronized (data) {
-            Table t = data.get(tableName);
-            if (t == null) {
-                return null;
+        Path filePath = Path.of(directory, tableName + ".table");
+        if (Files.notExists(filePath)) {
+            try {
+                Files.createFile(filePath);
+                data.put(tableName, new Table(tableName));
+                return true;
+            } catch (Exception e) {
+                return false;
             }
-            return t.getColumnValue(rowName, columnName);
         }
+        return false;
     }
 
-    public void save(String parentFolder) {
+    public synchronized void put(String tableName, String rowName, String columnName, byte[] value) {
+        Table t = data.get(tableName);
+        if (t == null) {
+            t = new Table(tableName);
+            data.put(tableName, t);
+        }
+        t.addColumnToRow(rowName, columnName, value);
+    }
+
+    public synchronized byte[] get(String tableName, String rowName, String columnName) {
+        Table t = data.get(tableName);
+        if (t == null) {
+            return null;
+        }
+        return t.getColumnValue(rowName, columnName);
+    }
+
+    public synchronized void save(String parentFolder) {
         for (Table t : data.values()) {
             t.save(parentFolder);
         }

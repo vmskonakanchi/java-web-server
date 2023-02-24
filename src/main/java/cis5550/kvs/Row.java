@@ -167,7 +167,6 @@ public class Row implements Serializable {
             e.printStackTrace();
             throw new RuntimeException("This should not happen!");
         }
-        ;
 
         return baos.toByteArray();
     }
