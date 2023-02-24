@@ -22,7 +22,7 @@ public class Worker {
             timer.schedule(new TimerTask() {
                 @Override
                 public void run() {
-                    System.out.println("Hitting Master");
+//                    System.out.println("Hitting Master");
                     String idToPing = "";
                     try {
                         //checking if the directory exists

@@ -8,7 +8,7 @@ import java.util.concurrent.*;
 
 public class Worker extends cis5550.generic.Worker {
 
-    private static final int MAX_THREADS = 10;
+    private static final int MAX_THREADS = 2;
 
     public static void main(String[] args) {
         if (args.length < 3) {
@@ -19,8 +19,23 @@ public class Worker extends cis5550.generic.Worker {
         Server.port(Integer.parseInt(args[0]));
         startPingThread(args[2], args[0], args[1]); // calling start ping thread
 
-        DataManager dataManager = new DataManager(); // data structure for storing data
+        DataManager dataManager = new DataManager(args[1]); // data structure for storing data
         ExecutorService threadPool = Executors.newFixedThreadPool(MAX_THREADS);
+
+        //creating a thread to load the data from the disk
+        try {
+            Thread t = new Thread(() -> {
+                if (dataManager.loadDataFromDisk()) {
+                    System.out.println("Loaded data from disk");
+                } else {
+                    System.out.println("Data not loaded successfully");
+                }
+            });
+            t.start();
+            t.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         Server.put("/data/:T/:R/:C", (req, res) -> {
             try {
@@ -66,7 +81,7 @@ public class Worker extends cis5550.generic.Worker {
                 String data = new String(dataManager.get(tableName, rowName, columnName), StandardCharsets.UTF_8);
                 res.body(data);
             } catch (Exception e) {
-                System.out.println(e.getMessage());
+                e.printStackTrace();
                 res.status(404, "FAIL");
             }
             return null;
@@ -74,11 +89,103 @@ public class Worker extends cis5550.generic.Worker {
 
         Server.put("/persist/:tableName", (req, res) -> {
             String tableName = req.params("tableName");
-            if (dataManager.createTable(tableName, args[1])) {
+            if (dataManager.createTable(tableName)) {
                 return "OK";
             } else {
                 res.status(403, "FAIL");
                 return null;
+            }
+        });
+
+        Server.get("/", (req, res) -> dataManager.getTablesAsHtml());
+        Server.get("/tables", (req, res) -> dataManager.getTables());
+
+        Server.put("/delete/:tableName", (req, res) -> {
+            try {
+                String tableName = req.params("tableName");
+                if (dataManager.deleteTable(tableName)) {
+                    return "OK";
+                } else {
+                    res.status(404, "NOT FOUND");
+                    return null;
+                }
+            } catch (Exception e) {
+                res.status(404, "NOT FOUND");
+                return null;
+            }
+        });
+
+        Server.get("/view/:tableName", (req, res) -> {
+            String tableName = req.params("tableName");
+            if (tableName == null) {
+                res.status(404, "FAIL");
+                return null;
+            }
+            return dataManager.getRowsFromTable(tableName);
+        });
+
+        Server.get("/count/:tableName", (req, res) -> {
+            try {
+                String tableName = req.params("tableName");
+                return dataManager.countRowsFromTable(tableName);
+            } catch (Exception e) {
+                res.status(404, "NOT FOUND");
+                return null;
+            }
+        });
+
+        Server.put("/rename/:tableName", (req, res) -> {
+            String tableName = req.params("tableName");
+            String newTableName = req.body();
+            if (dataManager.renameTable(tableName, newTableName)) {
+                return "OK";
+            } else {
+                res.status(404, "FAIL");
+                return null;
+            }
+        });
+
+        Server.get("/data/:tableName/:rowName", (req, res) -> {
+            String tableName = req.params("tableName");
+            String rowName = req.params("rowName");
+            try {
+                if (!dataManager.hasTable(tableName)) {
+                    res.status(404, "NOT FOUND");
+                    return null;
+                }
+                res.bodyAsBytes(dataManager.getRow(tableName, rowName).toByteArray());
+                return null;
+            } catch (Exception e) {
+                res.status(404, e.getMessage());
+                return null;
+            }
+        });
+
+        Server.get("/data/:tableName", (req, res) -> {
+            String tableName = req.params("tableName");
+            if (!dataManager.hasTable(tableName)) {
+                res.status(404, "NOT FOUND");
+                return null;
+            }
+            if (req.queryParams().contains("startRow") && req.queryParams().contains("endRowExclusive")) {
+                String startRow = req.queryParams("startRow");
+                String endRow = req.queryParams("endRowExclusive");
+            } else {
+                res.body(dataManager.getRowDataFromTable(tableName));
+            }
+            return null;
+        });
+
+        Server.put("/data/:tableName", (req, res) -> {
+            String tableName = req.params("tableName");
+            if (!dataManager.hasTable(tableName)) {
+                res.status(404, "NOT FOUND");
+                return null;
+            }
+            if (dataManager.saveRows(tableName, req.body())) {
+                return "OK";
+            } else {
+                return "FAIL";
             }
         });
     }

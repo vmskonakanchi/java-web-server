@@ -10,7 +10,7 @@ public class Row implements Serializable {
 
     public Row(String keyArg) {
         key = keyArg;
-        values = new HashMap<String, byte[]>();
+        values = new HashMap<>();
     }
 
     public synchronized String key() {
