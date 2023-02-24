@@ -79,6 +79,7 @@ public class Table implements Comparable<Table> {
                 builder.append(new String(r.toByteArray(), StandardCharsets.UTF_8))
                         .append("\n");
             }
+            builder.append("\n");
             return builder.toString();
         } catch (Exception e) {
             e.printStackTrace();
@@ -109,14 +110,14 @@ public class Table implements Comparable<Table> {
         return null;
     }
 
-    public boolean renameTable(String newTableName) {
-        this.name = newTableName;
+    public boolean renameTable(String parentFolder, String newTableName) {
         try {
-            File old = new File(name);
-            File newFile = new File(newTableName);
+            File old = new File(parentFolder + "/" + name + ".table");
+            File newFile = new File(parentFolder + "/" + newTableName + ".table");
             if (newFile.exists()) {
                 throw new RuntimeException("Table already exists");
             }
+            this.name = newTableName;
             return old.renameTo(newFile);
         } catch (Exception e) {
             System.out.println(e.getMessage());

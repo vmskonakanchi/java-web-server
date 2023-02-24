@@ -18,7 +18,7 @@ public class Worker extends cis5550.generic.Worker {
         //passing the port as a server
         Server.port(Integer.parseInt(args[0]));
         startPingThread(args[2], args[0], args[1]); // calling start ping thread
-
+        collectGarbage(); // collecting garbage
         DataManager dataManager = new DataManager(args[1]); // data structure for storing data
         ExecutorService threadPool = Executors.newFixedThreadPool(MAX_THREADS);
 
@@ -182,11 +182,8 @@ public class Worker extends cis5550.generic.Worker {
                 res.status(404, "NOT FOUND");
                 return null;
             }
-            if (dataManager.saveRows(tableName, req.body())) {
-                return "OK";
-            } else {
-                return "FAIL";
-            }
+            dataManager.saveRows(tableName, req.body());
+            return "OK";
         });
     }
 }

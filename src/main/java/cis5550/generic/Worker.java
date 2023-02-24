@@ -11,6 +11,7 @@ import java.util.TimerTask;
 
 public class Worker {
     private static final long THREAD_SLEEP_TIME = 1000 * 5; // 5 seconds wait time for the thread
+    private static final long GARBAGE_COLLECTION_WAIT_TIME = 1000 * 15;
 
     /*
      * Starts a new thread and pings the server using given arguments
@@ -53,5 +54,19 @@ public class Worker {
             System.out.println(e);
         }
 
+    }
+
+    protected static void collectGarbage() {
+        try {
+            Timer timer = new Timer();
+            timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    System.out.println("Collecting garbage");
+                }
+            }, 0, GARBAGE_COLLECTION_WAIT_TIME);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

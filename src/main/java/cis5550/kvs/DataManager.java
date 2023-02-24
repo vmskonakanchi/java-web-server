@@ -5,11 +5,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 public class DataManager {
@@ -42,11 +42,7 @@ public class DataManager {
     }
 
     public synchronized void put(String tableName, String rowName, String columnName, byte[] value) {
-        Table t = data.get(tableName);
-        if (t == null) {
-            t = new Table(tableName, true);
-            data.put(tableName, t);
-        }
+        Table t = data.computeIfAbsent(tableName, k -> new Table(tableName, true));
         t.addColumnToRow(rowName, columnName, value);
     }
 
@@ -124,7 +120,7 @@ public class DataManager {
             return false;
         }
         Table t = data.get(tableName);
-        if (t.renameTable(newTableName)) {
+        if (t.renameTable(workingDirectory, newTableName)) {
             data.remove(tableName);
             data.put(newTableName, t);
             return true;
@@ -163,7 +159,7 @@ public class DataManager {
             throw new RuntimeException("Table not found");
         }
         try {
-            Files.delete(Path.of(workingDirectory, tableName));
+            Files.delete(Path.of(workingDirectory, tableName + ".table"));
             data.remove(tableName);
             return true;
         } catch (Exception e) {
@@ -192,12 +188,16 @@ public class DataManager {
         return data.containsKey(tableName);
     }
 
-    public synchronized boolean saveRows(String tableName, String dataToInsert) {
+    public synchronized void saveRows(String tableName, String dataToInsert) {
         Table t = data.get(tableName);
-        for (String s : dataToInsert.split("\n")) {
-            t.addColumnToRow(s, s.split(" ")[2], dataToInsert.getBytes());
+        try {
+            //TODO : Streaming write test case need to take the data which can contain multiple rows and load the data into memory
+            for (String s : dataToInsert.split("\n")) {
+
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        return false;
     }
 
     public synchronized String getRowDataFromTable(String tableName) {
