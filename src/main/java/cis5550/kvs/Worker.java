@@ -9,8 +9,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class Worker extends cis5550.generic.Worker {
 
-    private static final int MAX_THREADS = 2;
-
     public static void main(String[] args) {
         if (args.length < 3) {
             System.out.println("Enter the required <port> <storage directory> <ip:port>");
@@ -19,9 +17,10 @@ public class Worker extends cis5550.generic.Worker {
         //passing the port as a server
         Server.port(Integer.parseInt(args[0]));
         startPingThread(args[2], args[0], args[1]); // calling start ping thread
-        collectGarbage(); // collecting garbage
         DataManager dataManager = new DataManager(args[1]); // data structure for storing data
-        ExecutorService threadPool = Executors.newFixedThreadPool(MAX_THREADS);
+
+//        collectGarbage(); // collecting garbage
+        doReplication(args[2]); // replicating data
 
         //creating a thread to load the data from the disk
         try {
@@ -52,19 +51,17 @@ public class Worker extends cis5550.generic.Worker {
                     String data = new String(byteData, StandardCharsets.UTF_8);
                     if (!data.equals("") && data.equals(ifColumnValue)) {
                         // If the ifcolumn exists and has the value specified in equals, execute the PUT operation
-                        threadPool.execute(() -> {
-                            dataManager.put(tableName, rowName, columnName, req.bodyAsBytes());
-                        });
+                        dataManager.put(tableName, rowName, columnName, req.bodyAsBytes());
+                        replicationQueue.add(new ReplicationItem(tableName, rowName, columnName, req.bodyAsBytes()));
                         return "OK";
                     } else {
                         // If the ifcolumn does not exist or does not have the value specified in equals, return FAIL
                         return "FAIL";
                     }
                 } else {
-                    // If the query parameters are not present, execute the PUT operation
-                    threadPool.execute(() -> {
-                        dataManager.put(tableName, rowName, columnName, req.bodyAsBytes());
-                    });
+                    // If the query parameters are not present, execute the PUT operations
+                    dataManager.put(tableName, rowName, columnName, req.bodyAsBytes());
+                    replicationQueue.add(new ReplicationItem(tableName, rowName, columnName, req.bodyAsBytes()));
                     return "OK";
                 }
             } catch (Exception e) {
@@ -122,13 +119,17 @@ public class Worker extends cis5550.generic.Worker {
                 res.status(404, "FAIL");
                 return null;
             }
-            return dataManager.getRowsFromTable(tableName);
+            if (req.queryParams().contains("page")) {
+                int page = Integer.parseInt(req.queryParams("page"));
+                return dataManager.getRowsFromTable(tableName, page);
+            } else {
+                return dataManager.getRowsFromTable(tableName, 0);
+            }
         });
 
         Server.get("/count/:tableName", (req, res) -> {
             try {
-                String tableName = req.params("tableName");
-                return dataManager.countRowsFromTable(tableName);
+                return dataManager.countRowsFromTable(req.params("tableName"));
             } catch (Exception e) {
                 res.status(404, "NOT FOUND");
                 return null;
@@ -154,7 +155,7 @@ public class Worker extends cis5550.generic.Worker {
                     res.status(404, "NOT FOUND");
                     return null;
                 }
-                res.bodyAsBytes(dataManager.getRow(tableName, rowName).toByteArray());
+                res.write(dataManager.getRow(tableName, rowName).toByteArray());
                 return null;
             } catch (Exception e) {
                 res.status(404, e.getMessage());

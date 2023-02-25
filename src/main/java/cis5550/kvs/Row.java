@@ -3,7 +3,7 @@ package cis5550.kvs;
 import java.util.*;
 import java.io.*;
 
-public class Row implements Serializable {
+public class Row implements Serializable,Comparable<Row> {
 
     protected String key;
     protected HashMap<String, byte[]> values;
@@ -169,6 +169,11 @@ public class Row implements Serializable {
         }
 
         return baos.toByteArray();
+    }
+
+    @Override
+    public int compareTo(Row o) {
+        return key.compareTo(o.key);
     }
 }
 

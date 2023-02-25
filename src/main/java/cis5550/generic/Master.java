@@ -35,6 +35,17 @@ public class Master {
         return builder.toString();
     }
 
+    protected static String getWorkerList() {
+        StringBuilder builder = new StringBuilder();
+        for (Entry entry : workerMap.values()) {
+            if (entry.isAlive()) {
+                builder.append(entry.getHost());
+                builder.append("\n");
+            }
+        }
+        return builder.toString();
+    }
+
     public static void registerRoutes() {
         // create routes for /ping and /workers using route table
         Server.get("/ping", (req, res) -> {

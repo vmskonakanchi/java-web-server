@@ -15,5 +15,6 @@ public class Master extends cis5550.generic.Master {
         registerRoutes();
         // handling the requests to the home route
         Server.get("/", (req, res) -> workerTable());
+        Server.get("/getWorkers" , (req, res) -> getWorkerList());
     }
 }

@@ -29,6 +29,26 @@ public class Entry implements Comparable<Entry> {
         this.lastPing = LocalTime.now();
     }
 
+    public String getId() {
+        return id;
+    }
+
+    public String getIpAddress() {
+        return ipAddress;
+    }
+
+    public String getPortNumber() {
+        return portNumber;
+    }
+
+    public String getHyperLink() {
+        return hyperLink;
+    }
+
+    public LocalTime getLastPing() {
+        return lastPing;
+    }
+
     public boolean isAlive() {
         LocalTime now = LocalTime.now();
         return !now.isAfter(lastPing.plusSeconds(PING_INTERVAL));
@@ -68,5 +88,9 @@ public class Entry implements Comparable<Entry> {
         builder.append(hyperLink);
         builder.append("</td></tr>");
         return builder.toString();
+    }
+
+    public String getHost() {
+        return ipAddress + ":" + portNumber;
     }
 }
