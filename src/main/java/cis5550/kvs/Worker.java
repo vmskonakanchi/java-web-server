@@ -5,6 +5,7 @@ import cis5550.webserver.Server;
 
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Worker extends cis5550.generic.Worker {
 
@@ -33,7 +34,7 @@ public class Worker extends cis5550.generic.Worker {
             });
             t.start();
             t.join();
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
@@ -178,10 +179,6 @@ public class Worker extends cis5550.generic.Worker {
 
         Server.put("/data/:tableName", (req, res) -> {
             String tableName = req.params("tableName");
-            if (!dataManager.hasTable(tableName)) {
-                res.status(404, "NOT FOUND");
-                return null;
-            }
             dataManager.saveRows(tableName, req.body());
             return "OK";
         });

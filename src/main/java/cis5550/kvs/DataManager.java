@@ -1,10 +1,8 @@
 package cis5550.kvs;
 
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.RandomAccessFile;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -70,22 +68,15 @@ public class DataManager {
         builder.append("<table>");
         //get the columns for all the rows
         builder.append("<tr><th>Row</th>");
-        Set<String> columns = data.get(tableName).getRows().stream()
-                .map(Row::columns)
-                .flatMap(Collection::stream)
-                .collect(Collectors.toSet());
+        Set<String> columns = data.get(tableName).getRows().stream().map(Row::columns).flatMap(Collection::stream).collect(Collectors.toSet());
         for (String s : columns) {
             builder.append("<th>").append(s).append("</th>");
         }
         builder.append("</tr>");
         for (Row r : data.get(tableName).getRows()) {
-            builder.append("<tr><td>")
-                    .append(r.key)
-                    .append("</td>");
+            builder.append("<tr><td>").append(r.key).append("</td>");
             for (String s : columns) {
-                builder.append("<td>")
-                        .append(r.get(s))
-                        .append("</td>");
+                builder.append("<td>").append(r.get(s)).append("</td>");
             }
             builder.append("</tr>");
         }
@@ -111,14 +102,16 @@ public class DataManager {
         if (!data.containsKey(tableName)) {
             throw new RuntimeException("Required table not found");
         }
-        return data.get(tableName).getRows().size();
+        try {
+            return Files.readAllLines(Path.of(workingDirectory, tableName + ".table")).size() + 1;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        }
     }
 
 
     public synchronized boolean renameTable(String tableName, String newTableName) {
-        if (!data.containsKey(tableName)) {
-            return false;
-        }
         Table t = data.get(tableName);
         if (t.renameTable(workingDirectory, newTableName)) {
             data.remove(tableName);
@@ -141,7 +134,7 @@ public class DataManager {
                         InputStream is = new FileInputStream(readFile);
                         for (int i = 0; i < totalRows; i++) {
                             Row r = Row.readFrom(is);
-                            t.addRow(r);
+                            t.addRow(r, false);
                         }
                         data.put(t.getName(), t);
                     }
@@ -149,7 +142,7 @@ public class DataManager {
             }
             return true;
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            e.printStackTrace();
             return false;
         }
     }
@@ -189,11 +182,12 @@ public class DataManager {
     }
 
     public synchronized void saveRows(String tableName, String dataToInsert) {
-        Table t = data.get(tableName);
+        Table t = data.computeIfAbsent(tableName, k -> new Table(tableName, true));
         try {
-            //TODO : Streaming write test case need to take the data which can contain multiple rows and load the data into memory
-            for (String s : dataToInsert.split("\n")) {
-
+            String[] lines = dataToInsert.split("\n");
+            for (String s : lines) {
+                String[] split = s.split(" ");
+                t.addColumnToRow(split[0], split[1], split[split.length - 1].getBytes(StandardCharsets.UTF_8));
             }
         } catch (Exception e) {
             e.printStackTrace();

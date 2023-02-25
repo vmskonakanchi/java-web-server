@@ -28,12 +28,20 @@ public class Table implements Comparable<Table> {
         return new ArrayList<>(rows.values());
     }
 
+    public synchronized int getRowSize() {
+        return rows.size();
+    }
+
     public synchronized Row addRow(String rowName) {
         return rows.put(rowName, new Row(rowName));
     }
 
-    public synchronized Row addRow(Row row) {
-        return rows.put(row.key, row);
+    public synchronized Row addRow(Row row, boolean needToWriteToDisk) {
+        Row r = rows.put(row.key, row);
+        if (needToWriteToDisk) {
+            saveRowToDisk(r);
+        }
+        return r;
     }
 
     public synchronized void addColumnToRow(String rowName, String columnName, byte[] value) {
@@ -76,8 +84,7 @@ public class Table implements Comparable<Table> {
             InputStream is = new FileInputStream(readFile);
             for (int i = 0; i < totalRows; i++) {
                 Row r = Row.readFrom(is);
-                builder.append(new String(r.toByteArray(), StandardCharsets.UTF_8))
-                        .append("\n");
+                builder.append(new String(r.toByteArray(), StandardCharsets.UTF_8)).append("\n");
             }
             builder.append("\n");
             return builder.toString();
@@ -112,15 +119,21 @@ public class Table implements Comparable<Table> {
 
     public boolean renameTable(String parentFolder, String newTableName) {
         try {
-            File old = new File(parentFolder + "/" + name + ".table");
-            File newFile = new File(parentFolder + "/" + newTableName + ".table");
+            File old = new File(parentFolder + "/" + name);
+            File newFile = new File(parentFolder + "/" + newTableName);
             if (newFile.exists()) {
                 throw new RuntimeException("Table already exists");
             }
             this.name = newTableName;
-            return old.renameTo(newFile);
+            Files.move(old.toPath(), newFile.toPath());
+            if (Files.deleteIfExists(old.toPath())) {
+                System.out.println("Deleted old file");
+            } else {
+                System.out.println("Cannot delete old file");
+            }
+            return true;
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            e.printStackTrace();
             return false;
         }
     }
