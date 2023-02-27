@@ -1,0 +1,1 @@
+java -jar target/worker-jar-with-dependencies.jar 8080 "./replication" localhost:8000

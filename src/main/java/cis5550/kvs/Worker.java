@@ -9,14 +9,17 @@ import java.nio.charset.StandardCharsets;
 public class Worker extends cis5550.generic.Worker {
 
     public static void main(String[] args) {
-        String[] details = new String[] {System.getenv("PORT") , System.getenv("DIRECTORY") , System.getenv("MASTER")};
-        //passing the port as a server
-        Server.port(Integer.parseInt(details[0]));
-        startPingThread(details[2], details[0], details[1]); // calling start ping thread
-        DataManager dataManager = new DataManager(details[1]); // data structure for storing data
+        if(args.length < 3) {
+            System.out.println("Usage: java -jar worker.jar <port> <data_dir> <master_ip:port>");
+            System.exit(1);
+        }
+
+        Server.port(Integer.parseInt(args[0]));
+        startPingThread(args[2], args[0], args[1]); // calling start ping thread
+        DataManager dataManager = new DataManager(args[1]); // data structure for storing data
 
         collectGarbage(); // collecting garbage
-        doReplication(details[2]); // replicating data
+        doReplication(args[2]); // replicating data
 
         //creating a thread to load the data from the disk
         try {

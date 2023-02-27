@@ -13,8 +13,6 @@
             <groupId>webserver</groupId>
             <artifactId>webserver</artifactId>
             <version>1</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/lib/webserver-1.jar</systemPath>
         </dependency>
     </dependencies>
 
@@ -28,33 +26,18 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.4.1</version>
                 <configuration>
-                    <!-- get all project dependencies -->
-                    <finalName>worker</finalName>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                    <!-- MainClass in mainfest make a executable jar -->
                     <archive>
                         <manifest>
                             <mainClass>cis5550.kvs.Worker</mainClass>
                         </manifest>
                     </archive>
-
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                    <finalName>worker</finalName>
                 </configuration>
-                <executions>
-                    <execution>
-                        <id>make-assembly</id>
-                        <!-- bind to the packaging phase -->
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>
