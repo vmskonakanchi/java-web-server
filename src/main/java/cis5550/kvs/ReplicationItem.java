@@ -22,7 +22,8 @@ public class ReplicationItem {
 
     public int replicate(String worker) {
         try {
-            URL toSendUrl = new URL("http://" + worker + "/data/put/" + tableName + "/" + rowName + "/" + columnName);
+            System.out.println("Replicating to " + worker);
+            URL toSendUrl = new URL("http://" + worker + "/data/" + tableName + "/" + rowName + "/" + columnName);
             HttpURLConnection connection = (HttpURLConnection) toSendUrl.openConnection();
             connection.setRequestMethod("PUT");
             connection.setDoOutput(true);

@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets;
 public class Worker extends cis5550.generic.Worker {
 
     public static void main(String[] args) {
-        if(args.length < 3) {
+        if (args.length < 3) {
             System.out.println("Usage: java -jar worker.jar <port> <data_dir> <master_ip:port>");
             System.exit(1);
         }
@@ -20,6 +20,7 @@ public class Worker extends cis5550.generic.Worker {
 
         collectGarbage(); // collecting garbage
         doReplication(args[2]); // replicating data
+
 
         //creating a thread to load the data from the disk
         try {
