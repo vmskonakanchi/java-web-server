@@ -89,25 +89,30 @@ public class Worker {
             timer.schedule(new TimerTask() {
                 @Override
                 public void run() {
-                    System.out.println("Replicating");
                     try {
                         // download the list of workers from the master
                         URL url = new URL("http://" + masterAddress + "/getWorkers");
                         String workers = new String(url.openStream().readAllBytes(), StandardCharsets.UTF_8);
-                        String[] workerArray = workers.split("\n");
-
-                        while (!replicationQueue.isEmpty()) {
-                            ReplicationItem item = replicationQueue.poll();
-                            //replicate the item to all the workers
-                            for (String worker : workerArray) {
-                                int result = item.replicate(worker);
-                                if (result == 200) {
-                                    System.out.println("Replication successful");
-                                } else {
-                                    System.out.println("Replication failed");
-                                    replicationQueue.add(item);
+                        if (workers.length() > 10) {
+                            String[] workerArray = workers.split("\n");
+                            System.out.println(Arrays.toString(workerArray));
+                            if (workerArray.length > 0) {
+                                while (!replicationQueue.isEmpty()) {
+                                    ReplicationItem item = replicationQueue.poll();
+                                    //replicate the item to all the workers
+                                    for (String worker : workerArray) {
+                                        int result = item.replicate(worker);
+                                        if (result == 200) {
+                                            System.out.println("Replication successful");
+                                        } else {
+                                            System.out.println("Replication failed");
+                                            replicationQueue.add(item);
+                                        }
+                                    }
                                 }
                             }
+                        } else {
+                            System.out.println("No workers to replicate");
                         }
                     } catch (Exception e) {
                         throw new RuntimeException(e);
