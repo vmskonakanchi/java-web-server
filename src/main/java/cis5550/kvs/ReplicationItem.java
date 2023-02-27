@@ -37,36 +37,4 @@ public class ReplicationItem {
             return 500;
         }
     }
-
-    public String getTableName() {
-        return tableName;
-    }
-
-    public void setTableName(String tableName) {
-        this.tableName = tableName;
-    }
-
-    public String getRowName() {
-        return rowName;
-    }
-
-    public void setRowName(String rowName) {
-        this.rowName = rowName;
-    }
-
-    public String getColumnName() {
-        return columnName;
-    }
-
-    public void setColumnName(String columnName) {
-        this.columnName = columnName;
-    }
-
-    public byte[] getDataToReplicate() {
-        return dataToReplicate;
-    }
-
-    public void setDataToReplicate(byte[] dataToReplicate) {
-        this.dataToReplicate = dataToReplicate;
-    }
 }
