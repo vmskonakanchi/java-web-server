@@ -1,26 +1,22 @@
 package cis5550.kvs;
 
+
 import cis5550.webserver.Server;
 
-
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
+
 
 public class Worker extends cis5550.generic.Worker {
 
     public static void main(String[] args) {
-        if (args.length < 3) {
-            System.out.println("Enter the required <port> <storage directory> <ip:port>");
-            System.exit(1);
-        }
+        String[] details = new String[] {System.getenv("PORT") , System.getenv("DIRECTORY") , System.getenv("MASTER")};
         //passing the port as a server
-        Server.port(Integer.parseInt(args[0]));
-        startPingThread(args[2], args[0], args[1]); // calling start ping thread
-        DataManager dataManager = new DataManager(args[1]); // data structure for storing data
+        Server.port(Integer.parseInt(details[0]));
+        startPingThread(details[2], details[0], details[1]); // calling start ping thread
+        DataManager dataManager = new DataManager(details[1]); // data structure for storing data
 
-//        collectGarbage(); // collecting garbage
-        doReplication(args[2]); // replicating data
+        collectGarbage(); // collecting garbage
+        doReplication(details[2]); // replicating data
 
         //creating a thread to load the data from the disk
         try {
