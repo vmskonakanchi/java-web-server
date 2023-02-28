@@ -35,11 +35,11 @@ public class Master {
         return builder.toString();
     }
 
-    protected static String getWorkerList(String requestedIp) {
+    protected static String getWorkerList(String reqHost) {
+        System.out.println("Request from " + reqHost);
         StringBuilder builder = new StringBuilder();
-        System.out.println("Requested IP: " + requestedIp);
         for (Entry entry : workerMap.values()) {
-            if (entry.isAlive() && !entry.getIpAddress().equals(requestedIp)) {
+            if (entry.isAlive()) {
                 builder.append(entry.getHost());
                 builder.append("\n");
             }

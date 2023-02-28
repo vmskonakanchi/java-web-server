@@ -93,21 +93,19 @@ public class Worker {
                         // download the list of workers from the master
                         URL url = new URL("http://" + masterAddress + "/getWorkers");
                         String workers = new String(url.openStream().readAllBytes(), StandardCharsets.UTF_8);
-                        if (workers.length() > 10) {
-                            String[] workerArray = workers.split("\n");
-                            System.out.println(Arrays.toString(workerArray));
-                            if (workerArray.length > 0) {
-                                while (!replicationQueue.isEmpty()) {
-                                    ReplicationItem item = replicationQueue.poll();
-                                    //replicate the item to all the workers
-                                    for (String worker : workerArray) {
-                                        int result = item.replicate(worker);
-                                        if (result == 200) {
-                                            System.out.println("Replication successful");
-                                        } else {
-                                            System.out.println("Replication failed");
-                                            replicationQueue.add(item);
-                                        }
+                        String[] workerArray = workers.split("\n");
+                        System.out.println("Worker array :" + Arrays.toString(workerArray));
+                        if (workerArray.length > 0) {
+                            if (!replicationQueue.isEmpty()) {
+                                ReplicationItem item = replicationQueue.poll();
+                                //replicate the item to all the workers
+                                for (String worker : workerArray) {
+                                    int result = item.replicate(worker);
+                                    if (result == 200) {
+                                        System.out.println("Replication successful");
+                                    } else {
+                                        System.out.println("Replication failed");
+                                        replicationQueue.add(item); // replication failed so adding to queue again
                                     }
                                 }
                             }
