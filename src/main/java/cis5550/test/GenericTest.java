@@ -1,10 +1,12 @@
 package cis5550.test;
 
-import java.util.*;
-import java.nio.file.*;
 import java.io.*;
-import java.net.*;
-import java.nio.charset.*;
+import java.net.ConnectException;
+import java.net.Socket;
+import java.net.SocketTimeoutException;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Random;
 
 class GenericTest {
   boolean exitUponFailure;

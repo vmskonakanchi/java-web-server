@@ -1,22 +1,16 @@
 package cis5550.kvs;
 
 import java.net.HttpURLConnection;
-import java.net.URI;
 import java.net.URL;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
 
 /*
- * A class to represent the replication item to be processed
- * by the replication thread in the worker
+ * A class to represent the replication item to be processed in another thread
  * */
-public class ReplicationItem {
-    private String tableName;
-    private String rowName;
-    private String columnName;
-    private byte[] dataToReplicate;
+public class ReplicationItem extends Thread {
+    private final String tableName;
+    private final String rowName;
+    private final String columnName;
+    private final byte[] dataToReplicate;
 
     public ReplicationItem(String tableName, String rowName, String columnName, byte[] dataToReplicate) {
         this.tableName = tableName;
@@ -25,17 +19,31 @@ public class ReplicationItem {
         this.dataToReplicate = dataToReplicate;
     }
 
-    public int replicate(String worker) {
+    @Override
+    public void run() {
+        synchronized (cis5550.generic.Worker.workerList) {
+            for (String worker : cis5550.generic.Worker.workerList) {
+                if (replicate(worker) == 200) {
+                    System.out.println("Replication successful");
+                    break;
+                } else {
+                    System.out.println("Replication failed");
+                }
+            }
+        }
+    }
+
+    private int replicate(String worker) {
         try {
-            System.out.println("Replicating to " + worker);
-            HttpClient client = HttpClient.newHttpClient();
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("http://" + worker + "/data/" + tableName + "/" + rowName + "/" + columnName))
-                    .PUT(HttpRequest.BodyPublishers.ofByteArray(dataToReplicate))
-                    .build();
-            HttpResponse<String> response = client.send(request,
-                    HttpResponse.BodyHandlers.ofString());
-            return response.statusCode();
+            URL url = new URL("http://" + worker + "/data/" + tableName + "/" + rowName + "/" + columnName);
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("PUT");
+            con.setDoOutput(true);
+            con.getOutputStream().write(dataToReplicate);
+            con.getOutputStream().flush();
+            con.getOutputStream().close();
+            System.out.println("Replicated to " + worker + " with status code " + con.getResponseCode());
+            return con.getResponseCode();
         } catch (Exception e) {
             e.printStackTrace();
             return 500;

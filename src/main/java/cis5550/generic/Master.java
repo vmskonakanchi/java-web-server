@@ -1,12 +1,9 @@
 package cis5550.generic;
 
 import cis5550.kvs.Entry;
-import cis5550.kvs.KVS;
-import cis5550.kvs.KVSClient;
 import cis5550.webserver.Server;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Hashtable;
 
 public class Master {
 
@@ -35,13 +32,11 @@ public class Master {
         return builder.toString();
     }
 
-    protected static String getWorkerList(String reqHost) {
-        System.out.println("Request from " + reqHost);
+    protected static String getWorkerList(String requestedIp) {
         StringBuilder builder = new StringBuilder();
         for (Entry entry : workerMap.values()) {
-            if (entry.isAlive()) {
-                builder.append(entry.getHost());
-                builder.append("\n");
+            if (entry.isAlive() && !entry.getHost().equals(requestedIp)) {
+                builder.append(entry.getHost()).append("\n");
             }
         }
         return builder.toString();

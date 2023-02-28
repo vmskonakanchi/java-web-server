@@ -4,15 +4,21 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 public class Table implements Comparable<Table> {
 
     private String name;
     private final Map<String, Row> rows;
     public final Map<String, Long> offsetToRow;
+
+    public Map<String, Long> getOffSetToRow() {
+        return offsetToRow;
+    }
 
     public Table(String name, boolean needToWriteTable) {
         this.name = needToWriteTable ? name + ".table" : name;
@@ -47,7 +53,6 @@ public class Table implements Comparable<Table> {
     public synchronized void addColumnToRow(String rowName, String columnName, byte[] value) {
         Row r = rows.computeIfAbsent(rowName, k -> new Row(rowName));
         r.put(columnName, value);
-        //save a single row to the disk
         saveRowToDisk(r);
     }
 
@@ -72,7 +77,7 @@ public class Table implements Comparable<Table> {
             });
             accessFile.close();
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            e.printStackTrace();
         }
     }
 

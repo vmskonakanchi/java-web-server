@@ -1,9 +1,14 @@
 package cis5550.kvs;
 
-import java.util.*;
-import java.net.*;
-import java.io.*;
 import cis5550.tools.HTTP;
+
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.Vector;
 
 public class KVSClient implements KVS {
 

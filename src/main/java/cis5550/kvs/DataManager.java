@@ -1,13 +1,16 @@
 package cis5550.kvs;
 
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 public class DataManager {
@@ -211,5 +214,9 @@ public class DataManager {
 
     public synchronized String getRowDataFromTable(String tableName) {
         return data.get(tableName).getRowsFromDisk(workingDirectory);
+    }
+
+    public Collection<Table> getAllTables() {
+        return data.values();
     }
 }

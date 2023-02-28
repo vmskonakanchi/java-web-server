@@ -1,6 +1,5 @@
 package cis5550.kvs;
 
-
 import cis5550.webserver.Server;
 
 import java.nio.charset.StandardCharsets;
@@ -13,13 +12,13 @@ public class Worker extends cis5550.generic.Worker {
             System.out.println("Usage: java -jar worker.jar <port> <data_dir> <master_ip:port>");
             System.exit(1);
         }
-
-        Server.port(Integer.parseInt(args[0]));
+        int port = Integer.parseInt(args[0]);
+        Server.port(port);
         startPingThread(args[2], args[0], args[1]); // calling start ping thread
         DataManager dataManager = new DataManager(args[1]); // data structure for storing data
 
-        collectGarbage(); // collecting garbage
-        doReplication(args[2]); // replicating data
+        collectGarbage(dataManager, args[1]); // collecting garbage
+        downloadWorkers(args[2], port); // downloading workers
 
 
         //creating a thread to load the data from the disk
@@ -52,16 +51,21 @@ public class Worker extends cis5550.generic.Worker {
                     if (!data.equals("") && data.equals(ifColumnValue)) {
                         // If the ifcolumn exists and has the value specified in equals, execute the PUT operation
                         dataManager.put(tableName, rowName, columnName, req.bodyAsBytes());
-                        replicationQueue.add(new ReplicationItem(tableName, rowName, columnName, req.bodyAsBytes()));
+//                        ReplicationItem item = new ReplicationItem(tableName, rowName, columnName, req.bodyAsBytes());
+//                        item.start();
+                        isLastRequestTime = true;
                         return "OK";
                     } else {
                         // If the ifcolumn does not exist or does not have the value specified in equals, return FAIL
+                        isLastRequestTime = true;
                         return "FAIL";
                     }
                 } else {
                     // If the query parameters are not present, execute the PUT operations
                     dataManager.put(tableName, rowName, columnName, req.bodyAsBytes());
-                    replicationQueue.add(new ReplicationItem(tableName, rowName, columnName, req.bodyAsBytes()));
+//                    ReplicationItem item = new ReplicationItem(tableName, rowName, columnName, req.bodyAsBytes());
+//                    item.start();
+                    isLastRequestTime = true;
                     return "OK";
                 }
             } catch (Exception e) {
@@ -82,29 +86,40 @@ public class Worker extends cis5550.generic.Worker {
                 e.printStackTrace();
                 res.status(404, "FAIL");
             }
+            isLastRequestTime = true;
             return null;
         });
 
         Server.put("/persist/:tableName", (req, res) -> {
             String tableName = req.params("tableName");
             if (dataManager.createTable(tableName)) {
+                isLastRequestTime = true;
                 return "OK";
             } else {
                 res.status(403, "FAIL");
+                isLastRequestTime = true;
                 return null;
             }
         });
 
-        Server.get("/", (req, res) -> dataManager.getTablesAsHtml());
-        Server.get("/tables", (req, res) -> dataManager.getTables());
+        Server.get("/", (req, res) -> {
+            isLastRequestTime = true;
+            return dataManager.getTablesAsHtml();
+        });
+        Server.get("/tables", (req, res) -> {
+            isLastRequestTime = true;
+            return dataManager.getTables();
+        });
 
         Server.put("/delete/:tableName", (req, res) -> {
             try {
                 String tableName = req.params("tableName");
                 if (dataManager.deleteTable(tableName)) {
+                    isLastRequestTime = true;
                     return "OK";
                 } else {
                     res.status(404, "NOT FOUND");
+                    isLastRequestTime = true;
                     return null;
                 }
             } catch (Exception e) {
@@ -117,18 +132,22 @@ public class Worker extends cis5550.generic.Worker {
             String tableName = req.params("tableName");
             if (tableName == null) {
                 res.status(404, "FAIL");
+                isLastRequestTime = true;
                 return null;
             }
             if (req.queryParams().contains("page")) {
                 int page = Integer.parseInt(req.queryParams("page"));
+                isLastRequestTime = true;
                 return dataManager.getRowsFromTable(tableName, page);
             } else {
+                isLastRequestTime = true;
                 return dataManager.getRowsFromTable(tableName, 0);
             }
         });
 
         Server.get("/count/:tableName", (req, res) -> {
             try {
+                isLastRequestTime = true;
                 return dataManager.countRowsFromTable(req.params("tableName"));
             } catch (Exception e) {
                 res.status(404, "NOT FOUND");
@@ -140,9 +159,11 @@ public class Worker extends cis5550.generic.Worker {
             String tableName = req.params("tableName");
             String newTableName = req.body();
             if (dataManager.renameTable(tableName, newTableName)) {
+                isLastRequestTime = true;
                 return "OK";
             } else {
                 res.status(404, "FAIL");
+                isLastRequestTime = true;
                 return null;
             }
         });
@@ -153,9 +174,11 @@ public class Worker extends cis5550.generic.Worker {
             try {
                 if (!dataManager.hasTable(tableName)) {
                     res.status(404, "NOT FOUND");
+                    isLastRequestTime = true;
                     return null;
                 }
                 res.write(dataManager.getRow(tableName, rowName).toByteArray());
+                isLastRequestTime = true;
                 return null;
             } catch (Exception e) {
                 res.status(404, e.getMessage());
@@ -167,6 +190,7 @@ public class Worker extends cis5550.generic.Worker {
             String tableName = req.params("tableName");
             if (!dataManager.hasTable(tableName)) {
                 res.status(404, "NOT FOUND");
+                isLastRequestTime = true;
                 return null;
             }
             if (req.queryParams().contains("startRow") && req.queryParams().contains("endRowExclusive")) {
@@ -175,12 +199,14 @@ public class Worker extends cis5550.generic.Worker {
             } else {
                 res.body(dataManager.getRowDataFromTable(tableName));
             }
+            isLastRequestTime = true;
             return null;
         });
 
         Server.put("/data/:tableName", (req, res) -> {
             String tableName = req.params("tableName");
             dataManager.saveRows(tableName, req.body());
+            isLastRequestTime = true;
             return "OK";
         });
     }

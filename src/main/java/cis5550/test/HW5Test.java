@@ -1,8 +1,11 @@
 package cis5550.test;
 
-import java.util.*;
 import java.io.*;
-import java.net.*;
+import java.net.Socket;
+import java.util.Random;
+import java.util.Scanner;
+import java.util.Set;
+import java.util.TreeSet;
 
 public class HW5Test extends GenericTest {
 
