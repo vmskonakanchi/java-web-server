@@ -219,4 +219,8 @@ public class DataManager {
     public Collection<Table> getAllTables() {
         return data.values();
     }
+
+    public String getSortedRows(String tableName, String startRow, String endRow) {
+        return data.get(tableName).getSortedRowsFromDisk(workingDirectory ,tableName , startRow, endRow);
+    }
 }

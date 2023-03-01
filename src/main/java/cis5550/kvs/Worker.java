@@ -51,8 +51,8 @@ public class Worker extends cis5550.generic.Worker {
                     if (!data.equals("") && data.equals(ifColumnValue)) {
                         // If the ifcolumn exists and has the value specified in equals, execute the PUT operation
                         dataManager.put(tableName, rowName, columnName, req.bodyAsBytes());
-//                        ReplicationItem item = new ReplicationItem(tableName, rowName, columnName, req.bodyAsBytes());
-//                        item.start();
+                        ReplicationItem item = new ReplicationItem(tableName, rowName, columnName, req.bodyAsBytes(), workerList);
+                        item.start();
                         isLastRequestTime = true;
                         return "OK";
                     } else {
@@ -63,8 +63,8 @@ public class Worker extends cis5550.generic.Worker {
                 } else {
                     // If the query parameters are not present, execute the PUT operations
                     dataManager.put(tableName, rowName, columnName, req.bodyAsBytes());
-//                    ReplicationItem item = new ReplicationItem(tableName, rowName, columnName, req.bodyAsBytes());
-//                    item.start();
+                    ReplicationItem item = new ReplicationItem(tableName, rowName, columnName, req.bodyAsBytes(),workerList);
+                    item.start();
                     isLastRequestTime = true;
                     return "OK";
                 }
@@ -187,20 +187,27 @@ public class Worker extends cis5550.generic.Worker {
         });
 
         Server.get("/data/:tableName", (req, res) -> {
-            String tableName = req.params("tableName");
-            if (!dataManager.hasTable(tableName)) {
-                res.status(404, "NOT FOUND");
+            try {
+                String tableName = req.params("tableName");
+                if (!dataManager.hasTable(tableName)) {
+                    res.status(404, "NOT FOUND");
+                    isLastRequestTime = true;
+                    return null;
+                }
+                if (req.queryParams().contains("startRow") && req.queryParams().contains("endRowExclusive")) {
+                    String startRow = req.queryParams("startRow");
+                    String endRow = req.queryParams("endRowExclusive");
+                    //sort the rows
+                    res.body(dataManager.getSortedRows(tableName, startRow, endRow));
+                } else {
+                    res.body(dataManager.getRowDataFromTable(tableName));
+                }
                 isLastRequestTime = true;
                 return null;
+            } catch (Exception e) {
+                res.status(404, "NOT FOUND");
+                return null;
             }
-            if (req.queryParams().contains("startRow") && req.queryParams().contains("endRowExclusive")) {
-                String startRow = req.queryParams("startRow");
-                String endRow = req.queryParams("endRowExclusive");
-            } else {
-                res.body(dataManager.getRowDataFromTable(tableName));
-            }
-            isLastRequestTime = true;
-            return null;
         });
 
         Server.put("/data/:tableName", (req, res) -> {

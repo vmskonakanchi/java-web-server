@@ -4,10 +4,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Table implements Comparable<Table> {
@@ -154,5 +151,32 @@ public class Table implements Comparable<Table> {
 
     public synchronized boolean contains(String rowName) {
         return rows.containsKey(rowName);
+    }
+
+    public String getSortedRowsFromDisk(String workingDirectory, String tableName, String startRow, String endRow) {
+        try {
+            StringBuilder builder = new StringBuilder();
+            List<Row> rows = new ArrayList<>();
+            File readFile = new File(workingDirectory + "/" + name);
+            long totalRows = Files.lines(readFile.toPath()).count();
+            InputStream is = new FileInputStream(readFile);
+            for (int i = 0; i < totalRows; i++) {
+                Row r = Row.readFrom(is);
+                if (r != null) {
+                    rows.add(r);
+                }
+            }
+            Collections.sort(rows);
+            for (Row r : rows) {
+                if (r.key.charAt(0) > startRow.charAt(0) && r.key.charAt(0) < endRow.charAt(0)) {
+                    builder.append(new String(r.toByteArray(), StandardCharsets.UTF_8)).append("\n");
+                }
+            }
+            builder.append("\n");
+            return builder.toString();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "";
+        }
     }
 }

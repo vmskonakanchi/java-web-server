@@ -12,23 +12,24 @@ public class ReplicationItem extends Thread {
     private final String columnName;
     private final byte[] dataToReplicate;
 
-    public ReplicationItem(String tableName, String rowName, String columnName, byte[] dataToReplicate) {
+    private final String[] workerList;
+
+    public ReplicationItem(String tableName, String rowName, String columnName, byte[] dataToReplicate, String[] workerList) {
         this.tableName = tableName;
         this.rowName = rowName;
         this.columnName = columnName;
         this.dataToReplicate = dataToReplicate;
+        this.workerList = workerList;
     }
 
     @Override
     public void run() {
-        synchronized (cis5550.generic.Worker.workerList) {
-            for (String worker : cis5550.generic.Worker.workerList) {
-                if (replicate(worker) == 200) {
-                    System.out.println("Replication successful");
-                    break;
-                } else {
-                    System.out.println("Replication failed");
-                }
+        for (String worker : workerList) {
+            if (replicate(worker) == 200) {
+                System.out.println("Replication successful");
+                break;
+            } else {
+                System.out.println("Replication failed");
             }
         }
     }
