@@ -1,9 +1,8 @@
 package cis5550.tools;
 
+import java.util.*;
 import java.io.*;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
 
 public class Logger {
 
