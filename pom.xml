@@ -14,6 +14,12 @@
             <artifactId>webserver</artifactId>
             <version>1</version>
         </dependency>
+        <dependency>
+            <groupId>kvs</groupId>
+            <artifactId>kvs</artifactId>
+            <version>1</version>
+        </dependency>
+
     </dependencies>
 
     <properties>
