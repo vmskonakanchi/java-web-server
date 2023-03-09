@@ -1,3 +1,7 @@
+# custom ignores
+__worker
+__worker2
+
 target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
