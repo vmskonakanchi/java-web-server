@@ -66,7 +66,7 @@ public class FlameSubmit {
     return errorResponse;
   }
 
-  public static void main(String args[]) throws Exception {
+  public static void main(String[] args) throws Exception {
     if (args.length < 3) {
     	System.err.println("Syntax: FlameSubmit <server> <jarFile> <className> [args...]");
     	System.exit(1);

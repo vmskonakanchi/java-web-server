@@ -9,6 +9,7 @@ import java.lang.reflect.*;
 import static cis5550.webserver.Server.*;
 
 import cis5550.flameimpl.FlameContextImpl;
+import cis5550.flameimpl.FlameRDDImpl;
 import cis5550.kvs.KVSClient;
 import cis5550.tools.*;
 
@@ -61,7 +62,6 @@ class Master extends cis5550.generic.Master {
             }
 
             Vector<String> argVector = new Vector<String>();
-            StringBuilder builder = new StringBuilder();
             for (int i = 1; request.queryParams("arg" + i) != null; i++) {
                 argVector.add(URLDecoder.decode(request.queryParams("arg" + i), StandardCharsets.UTF_8));
             }
@@ -115,13 +115,9 @@ class Master extends cis5550.generic.Master {
             // back to the user in the HTTP response, to help with debugging.
 
             try {
-                Loader.invokeRunMethod(jarFile, className, new FlameContextImpl(jarName), argVector);
-                for (int i = 0; i < argVector.size(); i++) {
-                    if (i > 1) {
-                        builder.append(",");
-                    }
-                    builder.append(argVector.get(i));
-                }
+                FlameContextImpl flameContext = new FlameContextImpl(jarName);
+                Loader.invokeRunMethod(jarFile, className, flameContext, argVector);
+                response.body(flameContext.getJobString());
             } catch (IllegalAccessException iae) {
                 response.status(400, "Bad request");
                 return "Double-check that the class " + className + " contains a public static run(FlameContext, String[]) method, and that the class itself is public!";
@@ -135,12 +131,9 @@ class Master extends cis5550.generic.Master {
                 response.status(500, "Job threw an exception");
                 return sw.toString();
             }
-
             return null;
         });
 
-        get("/version", (request, response) -> {
-            return "v1.2 Oct 28 2022";
-        });
+        get("/version", (request, response) -> "v1.2 Oct 28 2022");
     }
 }

@@ -1,5 +1,6 @@
 package cis5550.flameimpl;
 
+import cis5550.constants.Utils;
 import cis5550.flame.FlamePairRDD;
 import cis5550.flame.FlameRDD;
 import cis5550.kvs.KVSClient;
@@ -7,7 +8,6 @@ import cis5550.kvs.Row;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 
 public class FlameRDDImpl implements FlameRDD {
@@ -21,10 +21,10 @@ public class FlameRDDImpl implements FlameRDD {
     public List<String> collect() throws Exception {
         KVSClient client = new KVSClient("localhost:8000");
         List<String> result = new ArrayList<>();
-        Iterator<Row> iter = client.scan(tableName);
-        while (iter.hasNext()) {
-            Row r = iter.next();
-            result.add(r.get(FlameContextImpl.COLUMN_NAME));
+        Iterator<Row> iterator = client.scan(tableName);
+        while (iterator.hasNext()) {
+            Row r = iterator.next();
+            result.add(r.get(Utils.COLUMN_NAME));
         }
         return result;
     }

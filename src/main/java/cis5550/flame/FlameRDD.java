@@ -22,8 +22,6 @@ public interface FlameRDD {
         Iterable<FlamePair> op(String a) throws Exception;
     }
 
-    ;
-
     public interface StringToString extends Serializable {
         String op(String a) throws Exception;
     }
