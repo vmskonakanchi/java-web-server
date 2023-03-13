@@ -5,7 +5,10 @@ import cis5550.flame.FlamePairRDD;
 import cis5550.flame.FlameRDD;
 import cis5550.kvs.KVSClient;
 import cis5550.kvs.Row;
+import cis5550.tools.HTTP;
+import cis5550.tools.Serializer;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -31,7 +34,12 @@ public class FlameRDDImpl implements FlameRDD {
 
     @Override
     public FlameRDD flatMap(StringToIterable lambda) throws Exception {
-        return null;
+        try {
+            byte[] dataToSend = Serializer.objectToByteArray(lambda);
+            return FlameContextImpl.invokeOperation("/rdd/flatMap", dataToSend);
+        } catch (Exception ignored) {
+            return null;
+        }
     }
 
     @Override

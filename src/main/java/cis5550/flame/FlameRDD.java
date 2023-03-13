@@ -10,13 +10,9 @@ public interface FlameRDD {
         Iterable<String> op(String a) throws Exception;
     }
 
-    ;
-
     public interface StringToPair extends Serializable {
         FlamePair op(String a) throws Exception;
     }
-
-    ;
 
     public interface StringToPairIterable extends Serializable {
         Iterable<FlamePair> op(String a) throws Exception;
