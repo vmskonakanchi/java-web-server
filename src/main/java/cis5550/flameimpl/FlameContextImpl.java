@@ -55,7 +55,7 @@ public class FlameContextImpl implements FlameContext {
     public void invokeOperation(String argument, byte[] lambda) {
         String operationId = Utils.getOperationId(); //generating a new operation id for each operation
         Partitioner partitioner = new Partitioner();
-        partitioner.addFlameWorker("localhost:8080"); //adding the workers
+//        partitioner.addKVSWorker();
     }
 
     /**
