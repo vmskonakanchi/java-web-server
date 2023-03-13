@@ -57,14 +57,14 @@ public class FlameContextImpl implements FlameContext {
      */
     public static FlameRDD invokeOperation(String argument, byte[] lambda) {
         String operationId = "output_" + UUID.randomUUID() + "_" + System.currentTimeMillis();
-        Partitioner partitioner = new Partitioner();
+        Partitioner partitioner = new Partitioner(); //creating a partitioner
         try {
             HTTP.Response response = HTTP.doRequest("GET", "http://localhost:8000/workers", null);
             String[] workers = new String(response.body(), StandardCharsets.UTF_8).split("\n");
             for (int i = 1; i < workers.length; i++) {
                 String workerId = workers[i].split(",")[0]; //getting the workerId
                 String workerAddress = workers[i].split(",")[1]; //getting the workerAddress
-                partitioner.addKVSWorker(workerAddress, null, null);
+                partitioner.addKVSWorker(workerAddress, workerId, null);
             }
             HTTP.Response flameResponse = HTTP.doRequest("GET", "http://localhost:9000/workers", null);
             String[] flameWorkers = new String(flameResponse.body(), StandardCharsets.UTF_8).split("\n");
