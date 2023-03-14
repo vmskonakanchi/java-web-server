@@ -45,7 +45,7 @@ class Worker extends cis5550.generic.Worker {
             try {
                 FlameRDD.StringToIterable iterable = (FlameRDD.StringToIterable) Serializer.byteArrayToObject(req.bodyAsBytes(), new File(jarName));
                 KVSClient client = new KVSClient(masterAddress);
-                Iterator<Row> iterator = client.scan(inputTable);
+                Iterator<Row> iterator = client.scan(inputTable, startKey, endKey);
                 int i = 0;
                 while (iterator.hasNext()) {
                     Row r = iterator.next();
