@@ -15,16 +15,17 @@ import java.util.List;
 
 public class FlameRDDImpl implements FlameRDD {
     private final String tableName;
+    private final KVSClient kvs;
 
-    public FlameRDDImpl(String tableName) {
+    public FlameRDDImpl(String tableName, KVSClient kvsClient) {
         this.tableName = tableName;
+        this.kvs = kvsClient;
     }
 
     @Override
     public List<String> collect() throws Exception {
-        KVSClient client = new KVSClient("localhost:8000");
         List<String> result = new ArrayList<>();
-        Iterator<Row> iterator = client.scan(tableName);
+        Iterator<Row> iterator = kvs.scan(tableName);
         while (iterator.hasNext()) {
             Row r = iterator.next();
             result.add(r.get(Utils.COLUMN_NAME));
@@ -36,15 +37,22 @@ public class FlameRDDImpl implements FlameRDD {
     public FlameRDD flatMap(StringToIterable lambda) throws Exception {
         try {
             byte[] dataToSend = Serializer.objectToByteArray(lambda);
-            return FlameContextImpl.invokeOperation("/rdd/flatMap", dataToSend);
-        } catch (Exception ignored) {
-            return null;
+            return FlameContextImpl.invokeOperation("/rdd/flatMap", dataToSend, FlameRDD.class, tableName);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
         }
     }
 
     @Override
     public FlamePairRDD mapToPair(StringToPair lambda) throws Exception {
-        return null;
+        try {
+            byte[] dataToSend = Serializer.objectToByteArray(lambda);
+            return FlameContextImpl.invokeOperation("/rdd/mapToPair", dataToSend, FlamePairRDD.class, tableName);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     @Override

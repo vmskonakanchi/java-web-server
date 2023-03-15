@@ -1,7 +1,6 @@
 # custom ignores
 *.jar
 worker1
-tests
 
 target/
 !.mvn/wrapper/maven-wrapper.jar

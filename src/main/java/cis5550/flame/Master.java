@@ -114,7 +114,7 @@ class Master extends cis5550.generic.Master {
             // back to the user in the HTTP response, to help with debugging.
 
             try {
-                FlameContextImpl flameContext = new FlameContextImpl(jarName);
+                FlameContextImpl flameContext = new FlameContextImpl(jarName, kvs, getWorkers());
                 Loader.invokeRunMethod(jarFile, className, flameContext, argVector);
                 response.body(flameContext.getJobString());
             } catch (IllegalAccessException iae) {
