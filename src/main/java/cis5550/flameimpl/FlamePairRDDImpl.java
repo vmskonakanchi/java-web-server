@@ -2,6 +2,7 @@ package cis5550.flameimpl;
 
 import cis5550.flame.FlamePair;
 import cis5550.flame.FlamePairRDD;
+import cis5550.flame.FlameRDD;
 import cis5550.kvs.KVSClient;
 import cis5550.kvs.Row;
 import cis5550.tools.Serializer;
@@ -37,5 +38,30 @@ public class FlamePairRDDImpl implements FlamePairRDD {
     public FlamePairRDD foldByKey(String zeroElement, TwoStringsToString lambda) throws Exception {
         byte[] dataToSend = Serializer.objectToByteArray(lambda);
         return FlameContextImpl.invokeOperation("/rdd/foldByKey", dataToSend, FlamePairRDD.class, tableName, zeroElement);
+    }
+
+    @Override
+    public void saveAsTable(String tableNameArg) throws Exception {
+
+    }
+
+    @Override
+    public FlameRDD flatMap(PairToStringIterable lambda) throws Exception {
+        return null;
+    }
+
+    @Override
+    public FlamePairRDD flatMapToPair(PairToPairIterable lambda) throws Exception {
+        return null;
+    }
+
+    @Override
+    public FlamePairRDD join(FlamePairRDD other) throws Exception {
+        return null;
+    }
+
+    @Override
+    public FlamePairRDD cogroup(FlamePairRDD other) throws Exception {
+        return null;
     }
 }

@@ -62,6 +62,16 @@ public class FlameContextImpl implements FlameContext {
         return new FlameRDDImpl(jobId, kvs);
     }
 
+    @Override
+    public FlameRDD fromTable(String tableName, RowToString lambda) throws Exception {
+        return null;
+    }
+
+    @Override
+    public void setConcurrencyLevel(int keyRangesPerWorker) {
+
+    }
+
     public static <T> T invokeOperation(String argument, byte[] lambda, Class<T> type, String tableName) throws IOException, InterruptedException {
         String newTableName = "output_" + UUID.randomUUID() + "_" + System.currentTimeMillis(); //creating a new tableName
         Partitioner partitioner = new Partitioner(); //creating a partitioner
@@ -186,4 +196,3 @@ public class FlameContextImpl implements FlameContext {
         }
     }
 }
-

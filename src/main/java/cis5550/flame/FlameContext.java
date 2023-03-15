@@ -2,10 +2,15 @@ package cis5550.flame;
 
 import java.util.*;
 import java.io.*;
+import cis5550.kvs.Row;
 import cis5550.kvs.KVSClient;
 
 public interface FlameContext {
   public KVSClient getKVS();
+
+  public interface RowToString extends Serializable {
+    String op(Row r);
+  };
 
 
   // When a job invokes output(), your solution should store the provided string
@@ -21,4 +26,21 @@ public interface FlameContext {
   // need to be parallelized.
 
   public FlameRDD parallelize(List<String> list) throws Exception;
+
+  // This function should scan the table in the key-value store with the specified name, 
+  // invoke the provided lambda with each Row of data from the KVS, and then return
+  // and RDD with all the strings that the lambda invocations returned. The lambda
+  // is allowed to return null for certain Rows; when it does, no data should be
+  // added to the RDD for these Rows. This method should run in parallel on all the
+  // workers, just like the RDD/PairRDD operations.
+
+  public FlameRDD fromTable(String tableName, RowToString lambda) throws Exception;
+
+  // This function should control how many separate key ranges each worker should 
+  // be assigned. If this function is never called, each worker should just get
+  // a single key range. But if setConcurrencyLevel(k) is called, each worker
+  // should get k separate, non-overlapping key ranges to work on, and the worker
+  // should work on these ranges in parallel, e.g., on separate cores.
+  
+  public void setConcurrencyLevel(int keyRangesPerWorker);
 }

@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Vector;
 
 public class FlameRDDImpl implements FlameRDD {
     private final String tableName;
@@ -20,6 +21,31 @@ public class FlameRDDImpl implements FlameRDD {
     public FlameRDDImpl(String tableName, KVSClient kvsClient) {
         this.tableName = tableName;
         this.kvs = kvsClient;
+    }
+
+    @Override
+    public int count() throws Exception {
+        return 0;
+    }
+
+    @Override
+    public void saveAsTable(String tableNameArg) throws Exception {
+
+    }
+
+    @Override
+    public FlameRDD distinct() throws Exception {
+        return null;
+    }
+
+    @Override
+    public Vector<String> take(int num) throws Exception {
+        return null;
+    }
+
+    @Override
+    public String fold(String zeroElement, FlamePairRDD.TwoStringsToString lambda) throws Exception {
+        return null;
     }
 
     @Override
@@ -45,6 +71,11 @@ public class FlameRDDImpl implements FlameRDD {
     }
 
     @Override
+    public FlamePairRDD flatMapToPair(StringToPairIterable lambda) throws Exception {
+        return null;
+    }
+
+    @Override
     public FlamePairRDD mapToPair(StringToPair lambda) throws Exception {
         try {
             byte[] dataToSend = Serializer.objectToByteArray(lambda);
@@ -67,6 +98,16 @@ public class FlameRDDImpl implements FlameRDD {
 
     @Override
     public FlamePairRDD groupBy(StringToString lambda) throws Exception {
+        return null;
+    }
+
+    @Override
+    public FlameRDD filter(StringToBoolean lambda) throws Exception {
+        return null;
+    }
+
+    @Override
+    public FlameRDD mapPartitions(IteratorToIterator lambda) throws Exception {
         return null;
     }
 }
