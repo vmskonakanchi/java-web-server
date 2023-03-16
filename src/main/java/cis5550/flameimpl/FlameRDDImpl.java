@@ -25,12 +25,12 @@ public class FlameRDDImpl implements FlameRDD {
 
     @Override
     public int count() throws Exception {
-        return 0;
+        return kvs.count(tableName);
     }
 
     @Override
     public void saveAsTable(String tableNameArg) throws Exception {
-
+        kvs.rename(tableName, tableNameArg);
     }
 
     @Override
@@ -40,7 +40,15 @@ public class FlameRDDImpl implements FlameRDD {
 
     @Override
     public Vector<String> take(int num) throws Exception {
-        return null;
+        Iterator<Row> iterator = kvs.scan(tableName);
+        Vector<String> result = new Vector<>();
+        for (int i = 0; i < num; i++) {
+            if (iterator.hasNext()) {
+                Row r = iterator.next();
+                result.add(r.get(Utils.COLUMN_NAME));
+            }
+        }
+        return result;
     }
 
     @Override

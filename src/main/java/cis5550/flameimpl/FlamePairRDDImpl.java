@@ -42,7 +42,7 @@ public class FlamePairRDDImpl implements FlamePairRDD {
 
     @Override
     public void saveAsTable(String tableNameArg) throws Exception {
-
+        kvs.rename(tableName, tableNameArg);
     }
 
     @Override

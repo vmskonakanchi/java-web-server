@@ -9,6 +9,7 @@ import cis5550.kvs.KVSClient;
 import cis5550.tools.HTTP;
 import cis5550.tools.Hasher;
 import cis5550.tools.Partitioner;
+import cis5550.tools.Serializer;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -64,7 +65,8 @@ public class FlameContextImpl implements FlameContext {
 
     @Override
     public FlameRDD fromTable(String tableName, RowToString lambda) throws Exception {
-        return null;
+        byte[] dataToSend = Serializer.objectToByteArray(lambda);
+        return FlameContextImpl.invokeOperation("rdd/fromTable", dataToSend, FlameRDD.class, tableName);
     }
 
     @Override

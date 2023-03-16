@@ -1,9 +1,8 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="All" type="CompoundRunConfigurationType">
-    <toRun name="2F_Worker" type="Application" />
+  <configuration default="false" name="HW-7" type="CompoundRunConfigurationType">
     <toRun name="F_Master" type="Application" />
     <toRun name="F_Worker" type="Application" />
-    <toRun name="HW6Test" type="Application" />
+    <toRun name="HW7Test" type="Application" />
     <toRun name="Master" type="Application" />
     <toRun name="Worker" type="Application" />
     <method v="2" />
