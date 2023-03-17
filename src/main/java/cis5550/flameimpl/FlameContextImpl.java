@@ -66,7 +66,7 @@ public class FlameContextImpl implements FlameContext {
     @Override
     public FlameRDD fromTable(String tableName, RowToString lambda) throws Exception {
         byte[] dataToSend = Serializer.objectToByteArray(lambda);
-        return FlameContextImpl.invokeOperation("rdd/fromTable", dataToSend, FlameRDD.class, tableName);
+        return FlameContextImpl.invokeOperation("/rdd/fromTable", dataToSend, FlameRDD.class, tableName);
     }
 
     @Override
@@ -99,7 +99,11 @@ public class FlameContextImpl implements FlameContext {
                 Partitioner.Partition p = partitions.get(i);
                 requestThreads[i] = new Thread(() -> {
                     try {
-                        String urlString = p.assignedFlameWorker + argument + "?inputTable=" + tableName + "&outputTable=" + newTableName + "&startKey=" + p.fromKey + "&endKey=" + p.toKeyExclusive + "&master=" + staticKvs.getMaster();
+                        String urlString = p.assignedFlameWorker + argument + "?inputTable=" +
+                                tableName + "&outputTable=" +
+                                newTableName + "&startKey=" + p.fromKey + "&endKey=" +
+                                p.toKeyExclusive + "&master=" + staticKvs.getMaster();
+                        System.out.println("Sending request to " + urlString);
                         HTTP.Response res = HTTP.doRequest("POST", urlString, lambda);
                         if (res.statusCode() != 200) {
                             throw new RuntimeException("The operation failed");
@@ -160,10 +164,7 @@ public class FlameContextImpl implements FlameContext {
                 Partitioner.Partition p = partitions.get(i);
                 requestThreads[i] = new Thread(() -> {
                     try {
-                        String urlString = p.assignedFlameWorker + argument + "?inputTable=" + tableName + "&outputTable=" + newTableName +
-                                "&startKey=" + p.fromKey + "&endKey=" + p.toKeyExclusive
-                                + "&master=" + staticKvs.getMaster()
-                                + "&arg=" + arg;
+                        String urlString = p.assignedFlameWorker + argument + "?inputTable=" + tableName + "&outputTable=" + newTableName + "&startKey=" + p.fromKey + "&endKey=" + p.toKeyExclusive + "&master=" + staticKvs.getMaster() + "&arg=" + arg;
                         HTTP.Response res = HTTP.doRequest("POST", urlString, lambda);
                         if (res.statusCode() != 200) {
                             throw new RuntimeException("The operation failed");
