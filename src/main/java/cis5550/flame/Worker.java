@@ -51,7 +51,6 @@ class Worker extends cis5550.generic.Worker {
                 while (iterator.hasNext()) {
                     Row r = iterator.next();
                     Iterable<String> opIterator = iterable.op(r.get(Utils.COLUMN_NAME));
-                    System.out.println("Rows Data : " + r.key().charAt(0) + " : " + r.get(Utils.COLUMN_NAME));
                     if (opIterator == null) continue; //if the lambda returns null, skip
                     for (String s : opIterator) {
                         client.put(outputTable, Hasher.hash(UUID.randomUUID() + "-" + System.currentTimeMillis() + s), Utils.COLUMN_NAME, s);
@@ -140,6 +139,34 @@ class Worker extends cis5550.generic.Worker {
             return null;
         });
 
+        post("/rdd/flatMap/iterable", (req, res) -> {
+            String inputTable = req.queryParams("inputTable");
+            String outputTable = req.queryParams("outputTable");
+            String startKey = req.queryParams("startKey");
+            String endKey = req.queryParams("endKey");
+            String master = req.queryParams("master");
+            try {
+                FlamePairRDD.PairToStringIterable iterable = (FlamePairRDD.PairToStringIterable) Serializer.byteArrayToObject(req.bodyAsBytes(), myJAR);
+                KVSClient client = new KVSClient(master);
+                if (startKey.equals("null")) startKey = null;
+                if (endKey.equals("null")) endKey = null;
+                Iterator<Row> iterator = client.scan(inputTable, startKey, endKey);
+                while (iterator.hasNext()) {
+                    Row r = iterator.next();
+                    FlamePair pair = new FlamePair(r.key(), r.get(Utils.COLUMN_NAME));
+                    Iterable<String> opIterator = iterable.op(pair);
+                    if (opIterator == null) continue; //if the lambda returns null, skip
+                    for (String s : opIterator) {
+                        //--- client.put(tableName, rowName , colName, value) --- //
+//                        client.put(outputTable, r.key(),pair, s);
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return null;
+        });
+
         post("/rdd/flatMapToPair", (req, res) -> {
             String inputTable = req.queryParams("inputTable");
             String outputTable = req.queryParams("outputTable");
@@ -159,6 +186,27 @@ class Worker extends cis5550.generic.Worker {
                     for (FlamePair p : opIterator) {
                         client.put(outputTable, p.a, r.key(), p.b);
                     }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return null;
+        });
+
+        post("/rdd/distinct", (req, res) -> {
+            String inputTable = req.queryParams("inputTable");
+            String outputTable = req.queryParams("outputTable");
+            String startKey = req.queryParams("startKey");
+            String endKey = req.queryParams("endKey");
+            String master = req.queryParams("master");
+            try {
+                KVSClient client = new KVSClient(master);
+                if (startKey.equals("null")) startKey = null;
+                if (endKey.equals("null")) endKey = null;
+                Iterator<Row> iterator = client.scan(inputTable, startKey, endKey);
+                while (iterator.hasNext()) {
+                    Row r = iterator.next();
+                    client.put(outputTable, r.key(), Utils.COLUMN_NAME, r.get(Utils.COLUMN_NAME));
                 }
             } catch (Exception e) {
                 e.printStackTrace();

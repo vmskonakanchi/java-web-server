@@ -48,7 +48,7 @@ public class FlamePairRDDImpl implements FlamePairRDD {
     @Override
     public FlameRDD flatMap(PairToStringIterable lambda) throws Exception {
         byte[] dataToSend = Serializer.objectToByteArray(lambda);
-        return FlameContextImpl.invokeOperation("/rdd/flatMap", dataToSend, FlameRDD.class, tableName);
+        return FlameContextImpl.invokeOperation("/rdd/flatMap/iterable", dataToSend, FlameRDD.class, tableName);
     }
 
     @Override

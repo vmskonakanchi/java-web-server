@@ -35,7 +35,7 @@ public class FlameRDDImpl implements FlameRDD {
 
     @Override
     public FlameRDD distinct() throws Exception {
-        return null;
+        return FlameContextImpl.invokeOperation("/rdd/distinct", null, FlameRDD.class, tableName);
     }
 
     @Override
