@@ -21,6 +21,10 @@ public class FlamePairRDDImpl implements FlamePairRDD {
         this.kvs = kvsClient;
     }
 
+    public String getTableName() {
+        return tableName;
+    }
+
     @Override
     public List<FlamePair> collect() throws Exception {
         List<FlamePair> result = new ArrayList<>();
@@ -59,7 +63,8 @@ public class FlamePairRDDImpl implements FlamePairRDD {
 
     @Override
     public FlamePairRDD join(FlamePairRDD other) throws Exception {
-        return null;
+        FlamePairRDDImpl otherImpl = (FlamePairRDDImpl) other;
+        return FlameContextImpl.invokeOperation("/rdd/join", null, FlamePairRDD.class, tableName, otherImpl.getTableName());
     }
 
     @Override

@@ -103,7 +103,6 @@ class Worker extends cis5550.generic.Worker {
                 Iterator<Row> iterator = client.scan(inputTable, startKey, endKey);
                 while (iterator.hasNext()) {
                     Row row = iterator.next();
-                    System.out.println("zeroElement: " + zeroElement);
                     Integer accumulator = Integer.parseInt(zeroElement);
                     for (String col : row.columns()) {
                         accumulator = Integer.parseInt(iterable.op(accumulator.toString(), row.get(col)));
@@ -153,12 +152,12 @@ class Worker extends cis5550.generic.Worker {
                 Iterator<Row> iterator = client.scan(inputTable, startKey, endKey);
                 while (iterator.hasNext()) {
                     Row r = iterator.next();
-                    FlamePair pair = new FlamePair(r.key(), r.get(Utils.COLUMN_NAME));
-                    Iterable<String> opIterator = iterable.op(pair);
-                    if (opIterator == null) continue; //if the lambda returns null, skip
-                    for (String s : opIterator) {
-                        //--- client.put(tableName, rowName , colName, value) --- //
-//                        client.put(outputTable, r.key(),pair, s);
+                    for (String col : r.columns()) {
+                        Iterable<String> opIterator = iterable.op(new FlamePair(r.key(), r.get(col)));
+                        if (opIterator == null) continue; //if the lambda returns null, skip
+                        for (String s : opIterator) {
+                            client.put(outputTable, s, Utils.COLUMN_NAME, s);
+                        }
                     }
                 }
             } catch (Exception e) {
@@ -174,17 +173,19 @@ class Worker extends cis5550.generic.Worker {
             String endKey = req.queryParams("endKey");
             String master = req.queryParams("master");
             try {
-                FlameRDD.StringToPairIterable iterable = (FlameRDD.StringToPairIterable) Serializer.byteArrayToObject(req.bodyAsBytes(), myJAR);
+                FlamePairRDD.PairToPairIterable iterable = (FlamePairRDD.PairToPairIterable) Serializer.byteArrayToObject(req.bodyAsBytes(), myJAR);
                 KVSClient client = new KVSClient(master);
                 if (startKey.equals("null")) startKey = null;
                 if (endKey.equals("null")) endKey = null;
                 Iterator<Row> iterator = client.scan(inputTable, startKey, endKey);
                 while (iterator.hasNext()) {
                     Row r = iterator.next();
-                    Iterable<FlamePair> opIterator = iterable.op(r.get(Utils.COLUMN_NAME));
-                    if (opIterator == null) continue; //if the lambda returns null, skip
-                    for (FlamePair p : opIterator) {
-                        client.put(outputTable, p.a, r.key(), p.b);
+                    for (String s : r.columns()) {
+                        Iterable<FlamePair> opIterator = iterable.op(new FlamePair(r.key(), r.get(s)));
+                        if (opIterator == null) continue; //if the lambda returns null, skip
+                        for (FlamePair p : opIterator) {
+                            client.put(outputTable, p.a, Utils.COLUMN_NAME, p.b);
+                        }
                     }
                 }
             } catch (Exception e) {
@@ -206,8 +207,67 @@ class Worker extends cis5550.generic.Worker {
                 Iterator<Row> iterator = client.scan(inputTable, startKey, endKey);
                 while (iterator.hasNext()) {
                     Row r = iterator.next();
-                    client.put(outputTable, r.key(), Utils.COLUMN_NAME, r.get(Utils.COLUMN_NAME));
+                    client.put(outputTable, r.get(Utils.COLUMN_NAME), Utils.COLUMN_NAME, r.get(Utils.COLUMN_NAME));
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return null;
+        });
+
+        post("/rdd/join", (req, res) -> {
+            String inputTable = req.queryParams("inputTable");
+            String outputTable = req.queryParams("outputTable");
+            String anotherTable = req.queryParams("arg");
+            String startKey = req.queryParams("startKey");
+            String endKey = req.queryParams("endKey");
+            String master = req.queryParams("master");
+            try {
+                KVSClient client = new KVSClient(master);
+                if (startKey.equals("null")) startKey = null;
+                if (endKey.equals("null")) endKey = null;
+                Iterator<Row> iterator = client.scan(inputTable, startKey, endKey);
+                while (iterator.hasNext()) {
+                    Row r = iterator.next();
+                    Iterator<Row> anotherIterator = client.scan(anotherTable, startKey, endKey);
+                    while (anotherIterator.hasNext()) {
+                        Row anotherRow = anotherIterator.next();
+                        if (r.key().equals(anotherRow.key())) {
+                            for (String col : r.columns()) {
+                                for (String anotherCol : anotherRow.columns()) {
+                                    client.put(outputTable, r.key(), col + anotherCol, r.get(col) + "," + anotherRow.get(anotherCol));
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return null;
+        });
+
+        post("/rdd/fold", (req, res) -> {
+            String inputTable = req.queryParams("inputTable");
+            String startKey = req.queryParams("startKey");
+            String endKey = req.queryParams("endKey");
+            String master = req.queryParams("master");
+            String zeroElement = req.queryParams("arg");
+            try {
+                FlamePairRDD.TwoStringsToString iterable = (FlamePairRDD.TwoStringsToString) Serializer.byteArrayToObject(req.bodyAsBytes(), myJAR);
+                KVSClient client = new KVSClient(master);
+                if (startKey.equals("null")) startKey = null;
+                if (endKey.equals("null")) endKey = null;
+                //hand the input string from input table to the lambda and get a pair back
+                Iterator<Row> iterator = client.scan(inputTable, startKey, endKey);
+                int accumulator = Integer.parseInt(zeroElement);
+                while (iterator.hasNext()) {
+                    Row row = iterator.next();
+                    for (String col : row.columns()) {
+                        accumulator = Integer.parseInt(iterable.op(Integer.toString(accumulator), row.get(col)));
+                    }
+                }
+                res.body(Integer.toString(accumulator));
             } catch (Exception e) {
                 e.printStackTrace();
             }

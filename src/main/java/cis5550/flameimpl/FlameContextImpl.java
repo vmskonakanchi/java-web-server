@@ -99,10 +99,7 @@ public class FlameContextImpl implements FlameContext {
                 Partitioner.Partition p = partitions.get(i);
                 requestThreads[i] = new Thread(() -> {
                     try {
-                        String urlString = p.assignedFlameWorker + argument + "?inputTable=" +
-                                tableName + "&outputTable=" +
-                                newTableName + "&startKey=" + p.fromKey + "&endKey=" +
-                                p.toKeyExclusive + "&master=" + staticKvs.getMaster();
+                        String urlString = p.assignedFlameWorker + argument + "?inputTable=" + tableName + "&outputTable=" + newTableName + "&startKey=" + p.fromKey + "&endKey=" + p.toKeyExclusive + "&master=" + staticKvs.getMaster();
                         System.out.println("Sending request to " + urlString);
                         HTTP.Response res = HTTP.doRequest("POST", urlString, lambda);
                         if (res.statusCode() != 200) {
@@ -159,13 +156,18 @@ public class FlameContextImpl implements FlameContext {
                 partitioner.addFlameWorker(worker);
             }
             Vector<Partitioner.Partition> partitions = partitioner.assignPartitions();
+            Vector<String> results = new Vector<>();
             Thread[] requestThreads = new Thread[partitions.size()];
+            Object result;
             for (int i = 0; i < partitions.size(); i++) {
                 Partitioner.Partition p = partitions.get(i);
                 requestThreads[i] = new Thread(() -> {
                     try {
                         String urlString = p.assignedFlameWorker + argument + "?inputTable=" + tableName + "&outputTable=" + newTableName + "&startKey=" + p.fromKey + "&endKey=" + p.toKeyExclusive + "&master=" + staticKvs.getMaster() + "&arg=" + arg;
                         HTTP.Response res = HTTP.doRequest("POST", urlString, lambda);
+                        if (type == Vector.class) {
+                            results.add(new String(res.body(), StandardCharsets.UTF_8));
+                        }
                         if (res.statusCode() != 200) {
                             throw new RuntimeException("The operation failed");
                         }
@@ -183,12 +185,12 @@ public class FlameContextImpl implements FlameContext {
                 throw new IllegalArgumentException("Type cannot be null");
             }
 
-            Object result;
-
             if (type == FlameRDD.class) {
                 result = new FlameRDDImpl(newTableName, staticKvs);
             } else if (type == FlamePairRDD.class) {
                 result = new FlamePairRDDImpl(newTableName, staticKvs);
+            } else if (type == Vector.class) {
+                result = results;
             } else {
                 throw new IllegalArgumentException("Type not supported: " + type.getName());
             }

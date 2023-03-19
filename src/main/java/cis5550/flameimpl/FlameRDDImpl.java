@@ -53,7 +53,14 @@ public class FlameRDDImpl implements FlameRDD {
 
     @Override
     public String fold(String zeroElement, FlamePairRDD.TwoStringsToString lambda) throws Exception {
-        return null;
+        byte[] dataToSend = Serializer.objectToByteArray(lambda);
+        Vector<String> results = (Vector<String>) FlameContextImpl.invokeOperation("/rdd/fold", dataToSend, Vector.class, tableName, zeroElement);
+        int finalResult = 0;
+        for (String result : results) {
+            finalResult += Integer.parseInt(result);
+            System.out.println("Result: " + result);
+        }
+        return String.valueOf(finalResult);
     }
 
     @Override
@@ -80,24 +87,14 @@ public class FlameRDDImpl implements FlameRDD {
 
     @Override
     public FlamePairRDD flatMapToPair(StringToPairIterable lambda) throws Exception {
-        try {
-            byte[] dataToSend = Serializer.objectToByteArray(lambda);
-            return FlameContextImpl.invokeOperation("/rdd/flatMapToPair", dataToSend, FlamePairRDD.class, tableName);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw e;
-        }
+        byte[] dataToSend = Serializer.objectToByteArray(lambda);
+        return FlameContextImpl.invokeOperation("/rdd/flatMapToPair", dataToSend, FlamePairRDD.class, tableName);
     }
 
     @Override
     public FlamePairRDD mapToPair(StringToPair lambda) throws Exception {
-        try {
-            byte[] dataToSend = Serializer.objectToByteArray(lambda);
-            return FlameContextImpl.invokeOperation("/rdd/mapToPair", dataToSend, FlamePairRDD.class, tableName);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw e;
-        }
+        byte[] dataToSend = Serializer.objectToByteArray(lambda);
+        return FlameContextImpl.invokeOperation("/rdd/mapToPair", dataToSend, FlamePairRDD.class, tableName);
     }
 
     @Override
