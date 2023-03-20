@@ -69,6 +69,7 @@ public class FlamePairRDDImpl implements FlamePairRDD {
 
     @Override
     public FlamePairRDD cogroup(FlamePairRDD other) throws Exception {
-        return null;
+        byte[] dataToSend = Serializer.objectToByteArray(other);
+        return FlameContextImpl.invokeOperation("/rdd/cogroup", dataToSend, FlamePairRDD.class, tableName);
     }
 }

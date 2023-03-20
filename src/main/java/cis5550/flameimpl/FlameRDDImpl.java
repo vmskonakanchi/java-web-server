@@ -99,17 +99,19 @@ public class FlameRDDImpl implements FlameRDD {
 
     @Override
     public FlameRDD intersection(FlameRDD r) throws Exception {
-        return null;
+        byte[] dataToSend = Serializer.objectToByteArray(r);
+        return FlameContextImpl.invokeOperation("/rdd/intersection", dataToSend, FlameRDD.class, tableName);
     }
 
     @Override
     public FlameRDD sample(double f) throws Exception {
-        return null;
+        return FlameContextImpl.invokeOperation("/rdd/sample", null, FlameRDD.class, tableName, String.valueOf(f));
     }
 
     @Override
     public FlamePairRDD groupBy(StringToString lambda) throws Exception {
-        return null;
+        byte[] dataToSend = Serializer.objectToByteArray(lambda);
+        return FlameContextImpl.invokeOperation("/rdd/groupBy", dataToSend, FlamePairRDD.class, tableName);
     }
 
     @Override
@@ -120,6 +122,7 @@ public class FlameRDDImpl implements FlameRDD {
 
     @Override
     public FlameRDD mapPartitions(IteratorToIterator lambda) throws Exception {
-        return null;
+        byte[] dataToSend = Serializer.objectToByteArray(lambda);
+        return FlameContextImpl.invokeOperation("/rdd/mapPartitions", dataToSend, FlameRDD.class, tableName);
     }
 }
