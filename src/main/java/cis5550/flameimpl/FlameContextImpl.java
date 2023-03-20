@@ -100,7 +100,6 @@ public class FlameContextImpl implements FlameContext {
                 requestThreads[i] = new Thread(() -> {
                     try {
                         String urlString = p.assignedFlameWorker + argument + "?inputTable=" + tableName + "&outputTable=" + newTableName + "&startKey=" + p.fromKey + "&endKey=" + p.toKeyExclusive + "&master=" + staticKvs.getMaster();
-                        System.out.println("Sending request to " + urlString);
                         HTTP.Response res = HTTP.doRequest("POST", urlString, lambda);
                         if (res.statusCode() != 200) {
                             throw new RuntimeException("The operation failed");

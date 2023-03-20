@@ -1,9 +1,7 @@
 package cis5550.flame;
 
 import java.util.*;
-import java.net.*;
 import java.io.*;
-import java.util.concurrent.atomic.*;
 
 import static cis5550.webserver.Server.*;
 
@@ -11,8 +9,6 @@ import cis5550.constants.Utils;
 import cis5550.tools.Hasher;
 import cis5550.tools.Serializer;
 import cis5550.kvs.*;
-import cis5550.webserver.Request;
-import jdk.jshell.execution.Util;
 
 class Worker extends cis5550.generic.Worker {
 
@@ -270,6 +266,25 @@ class Worker extends cis5550.generic.Worker {
                 res.body(Integer.toString(accumulator));
             } catch (Exception e) {
                 e.printStackTrace();
+            }
+            return null;
+        });
+
+        post("/rdd/filter", (req, res) -> {
+            String inputTable = req.queryParams("inputTable");
+            String outputTable = req.queryParams("outputTable");
+            String startKey = req.queryParams("startKey");
+            String endKey = req.queryParams("endKey");
+            String master = req.queryParams("master");
+            KVSClient client = new KVSClient(master);
+            FlameRDD.StringToBoolean condition = (FlameRDD.StringToBoolean) Serializer.byteArrayToObject(req.bodyAsBytes(), myJAR);
+            Iterator<Row> iterator = client.scan(inputTable, startKey, endKey);
+            while (iterator.hasNext()) {
+                Row r = iterator.next();
+                if (r == null) continue;
+                if (condition.op(r.get(Utils.COLUMN_NAME))) {
+                    client.put(outputTable, r.key(), Utils.COLUMN_NAME, r.get(Utils.COLUMN_NAME));
+                }
             }
             return null;
         });

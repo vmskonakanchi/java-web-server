@@ -114,7 +114,8 @@ public class FlameRDDImpl implements FlameRDD {
 
     @Override
     public FlameRDD filter(StringToBoolean lambda) throws Exception {
-        return null;
+        byte[] dataToSend = Serializer.objectToByteArray(lambda);
+        return FlameContextImpl.invokeOperation("/rdd/filter", dataToSend, FlameRDD.class, tableName);
     }
 
     @Override
