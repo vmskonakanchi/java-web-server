@@ -1,1 +1,0 @@
-java -jar target/Worker.jar 8080 "./replication" 35.154.249.156:8000
